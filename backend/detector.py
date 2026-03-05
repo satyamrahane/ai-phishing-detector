@@ -22,14 +22,10 @@ def analyze_url(url):
         reasons.append("URL length unusually long")
 
     # Rule 4: Subdomains count
-    # Count dots to estimate subdomains
-    parsed = urlparse(url)
-    domain = parsed.netloc if parsed.netloc else parsed.path.split('/')[0]
-    # A standard bare domain has 1 dot (e.g., example.com)
-    # If the count is > 3, we increase the risk.
-    if domain.count('.') > 3:
+    # Count the number of dots in the URL to detect many subdomains
+    if url.count('.') > 3:
         score += 20
-        reasons.append("Too many subdomains detected")
+        reasons.append("Multiple suspicious subdomains detected")
 
     # Limit risk score to 100 maximum
     score = min(score, 100)
