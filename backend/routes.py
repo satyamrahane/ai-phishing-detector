@@ -9,7 +9,7 @@ def scan():
     
     # Error handling if URL is missing
     if not data or "url" not in data:
-        return jsonify({"error": "Missing 'url' parameter"}), 400
+        return jsonify({"error": "URL is required"}), 400
 
     url = data["url"]
 
