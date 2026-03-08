@@ -21,6 +21,9 @@ import datetime
 import pickle
 import os
 import sys
+import concurrent.futures
+import requests
+import base64
 
 # Make utils/ importable when running from backend/ directory
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "utils"))
@@ -58,6 +61,30 @@ def _load_model():
 _ML_MODEL = _load_model()
 
 
+
+def _do_whois_lookup(domain):
+    w = whois.whois(domain)
+    creation_date = w.creation_date
+    if isinstance(creation_date, list):
+        creation_date = min(creation_date)
+    if creation_date:
+        if isinstance(creation_date, datetime.datetime):
+            return (datetime.datetime.now() - creation_date).days
+        else:
+            return (datetime.date.today() - creation_date).days
+    return -1
+
+def _safe_domain_age_days(url: str) -> int:
+    try:
+        parsed = urlparse(url)
+        domain = (parsed.netloc or parsed.path).split(":")[0]
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(_do_whois_lookup, domain)
+            return future.result(timeout=5)
+    except Exception:
+        return -1
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # FEATURE EXTRACTOR
 # Converts a raw URL string into a numeric list that any sklearn model can use.
@@ -91,21 +118,7 @@ def extract_features(url: str) -> list:
     subdomain_count = url.count(".")
 
     # Feature 4: Domain age in days (-1 signals lookup failure)
-    domain_age_days = -1
-    try:
-        parsed = urlparse(url)
-        domain = (parsed.netloc or parsed.path).split(":")[0]
-        w = whois.whois(domain)
-        creation_date = w.creation_date
-        if isinstance(creation_date, list):
-            creation_date = min(creation_date)
-        if creation_date:
-            if isinstance(creation_date, datetime.datetime):
-                domain_age_days = (datetime.datetime.now() - creation_date).days
-            else:
-                domain_age_days = (datetime.date.today() - creation_date).days
-    except Exception:
-        pass  # Keep default -1
+    domain_age_days = _safe_domain_age_days(url)
 
     return [
         has_suspicious_keyword,
@@ -172,25 +185,35 @@ def _rule_based_analyze(url: str) -> dict:
         reasons.append(explain_multiple_subdomains(dot_count))
 
     # Rule 5: Domain age check
-    try:
-        parsed = urlparse(url)
-        domain = (parsed.netloc or parsed.path).split(":")[0]
-        w = whois.whois(domain)
-        creation_date = w.creation_date
-        if isinstance(creation_date, list):
-            creation_date = min(creation_date)
-        if creation_date:
-            if isinstance(creation_date, datetime.datetime):
-                age_days = (datetime.datetime.now() - creation_date).days
-            else:
-                age_days = (datetime.date.today() - creation_date).days
-            if age_days < 30:
-                score += 30
-                reasons.append(explain_recent_domain(age_days))
-    except Exception:
-        pass
+    age_days = _safe_domain_age_days(url)
+    if age_days != -1 and age_days < 30:
+        score += 30
+        reasons.append(explain_recent_domain(age_days))
 
     return score, reasons
+
+# ──────────────────────────────────────────────────────────────────────────────
+# VIRUSTOTAL API INTEGRATION
+# ──────────────────────────────────────────────────────────────────────────────
+def check_virustotal(url: str) -> int:
+    """Returns the number of engines that flagged the URL as malicious."""
+    api_key = os.environ.get("VIRUSTOTAL_API_KEY")
+    if not api_key or api_key == "your-virustotal-api-key-here":
+        return 0
+        
+    try:
+        # VirusTotal v3 requires base64url encoded strings without padding
+        url_id = base64.urlsafe_b64encode(url.encode()).decode().strip("=")
+        headers = {"x-apikey": api_key}
+        resp = requests.get(f"https://www.virustotal.com/api/v3/urls/{url_id}", headers=headers, timeout=4)
+        
+        if resp.status_code == 200:
+            stats = resp.json().get("data", {}).get("attributes", {}).get("last_analysis_stats", {})
+            return stats.get("malicious", 0)
+    except Exception:
+        pass
+        
+    return 0
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -215,6 +238,12 @@ def analyze_url(url: str) -> dict:
              reasons.append(explain_ml_high_risk(ml_score/100.0))
     else:
         final_score = rule_score
+        
+    # VirusTotal enhancement step
+    malicious_count = check_virustotal(url)
+    if malicious_count > 3:
+        final_score += 20
+        reasons.append(f"Flagged by VirusTotal ({malicious_count} engines)")
         
     final_score = min(final_score, 100)
     

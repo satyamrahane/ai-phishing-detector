@@ -13,6 +13,7 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
         rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         /* ── Dashboard-specific overrides ─────────────────────────── */
 
@@ -586,206 +587,259 @@
                 <div class="stat-bar-fill" id="barSafe"></div>
             </div>
         </div>
-    </div>
 
-    <!-- Scan log table -->
-    <div class="table-section">
-        <div class="table-header">
-            <h2>
-                Recent Scan Activity
-                <span class="count-pill" id="rowCount">0 records</span>
-            </h2>
-            <div class="table-actions">
-                <div class="filter-chips">
-                    <span class="chip active" data-filter="all" onclick="setFilter(this,'all')">All</span>
-                    <span class="chip danger-chip" data-filter="Phishing"
-                        onclick="setFilter(this,'Phishing')">Phishing</span>
-                    <span class="chip warn-chip" data-filter="Suspicious"
-                        onclick="setFilter(this,'Suspicious')">Suspicious</span>
-                    <span class="chip safe-chip" data-filter="Safe" onclick="setFilter(this,'Safe')">Safe</span>
-                </div>
-                <button id="refreshBtn" onclick="loadDashboard()">
-                    <span id="refreshIcon">↻</span> Refresh
-                </button>
+        <!-- Live Chart Section -->
+        <div style="width: 100%; max-width: 900px; margin-bottom: 24px; display: flex; justify-content: center;">
+            <div
+                style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-card); width: 100%; max-width: 400px;">
+                <canvas id="threatChart" width="300" height="300"></canvas>
             </div>
         </div>
 
-        <div class="table-card">
-            <table class="dash-table" id="scanTable">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>URL</th>
-                        <th>Risk Score</th>
-                        <th>Status</th>
-                        <th>Timestamp</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <!-- rows injected by JS -->
-                </tbody>
-            </table>
-            <div class="pagination">
-                <span class="paging-info" id="pagingInfo">Showing 0 of 0</span>
-                <div class="paging-btns">
-                    <button class="pg-btn" id="prevBtn" onclick="changePage(-1)" disabled>← Prev</button>
-                    <button class="pg-btn" id="nextBtn" onclick="changePage(1)" disabled>Next →</button>
+        <!-- Scan log table -->
+        <div class="table-section">
+            <div class="table-header">
+                <h2>
+                    Recent Scan Activity
+                    <span class="count-pill" id="rowCount">0 records</span>
+                </h2>
+                <div class="table-actions">
+                    <div class="filter-chips">
+                        <span class="chip active" data-filter="all" onclick="setFilter(this,'all')">All</span>
+                        <span class="chip danger-chip" data-filter="Phishing"
+                            onclick="setFilter(this,'Phishing')">Phishing</span>
+                        <span class="chip warn-chip" data-filter="Suspicious"
+                            onclick="setFilter(this,'Suspicious')">Suspicious</span>
+                        <span class="chip safe-chip" data-filter="Safe" onclick="setFilter(this,'Safe')">Safe</span>
+                    </div>
+                    <a href="http://127.0.0.1:5000/export" target="_blank"
+                        style="text-decoration:none; background: linear-gradient(135deg, var(--safe), #059669); border: none; border-radius: 8px; color: #fff; font-weight: 700; font-size: 0.78rem; letter-spacing: 0.02em; padding: 9px 18px; cursor: pointer; display: flex; align-items: center; gap: 7px; box-shadow: 0 0 14px rgba(16, 185, 129, 0.3);">
+                        📥 Export CSV
+                    </a>
+                    <button id="refreshBtn" onclick="loadDashboard()">
+                        <span id="refreshIcon">↻</span> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <table class="dash-table" id="scanTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>URL</th>
+                            <th>Risk Score</th>
+                            <th>Status</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- rows injected by JS -->
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <span class="paging-info" id="pagingInfo">Showing 0 of 0</span>
+                    <div class="paging-btns">
+                        <button class="pg-btn" id="prevBtn" onclick="changePage(-1)" disabled>← Prev</button>
+                        <button class="pg-btn" id="nextBtn" onclick="changePage(1)" disabled>Next →</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Footer -->
-    <footer style="max-width:900px;width:100%">
-        <strong>AI Phishing &amp; Scam Detection Platform</strong> · Dashboard ·
-        API: <strong>http://127.0.0.1:5000</strong>
-    </footer>
+        <!-- Footer -->
+        <footer style="max-width:900px;width:100%">
+            <strong>AI Phishing &amp; Scam Detection Platform</strong> · Dashboard ·
+            API: <strong>http://127.0.0.1:5000</strong>
+        </footer>
 
-    <script>
-        /* ── Dashboard inline JS ──────────────────────────────────────────────── */
-        const API_BASE = "http://127.0.0.1:5000";
-        const PAGE_SIZE = 10;
+        <script>
+            /* ── Dashboard inline JS ──────────────────────────────────────────────── */
+            const API_BASE = "http://127.0.0.1:5000";
+            const PAGE_SIZE = 10;
 
-        let allLogs = [];   // raw data from /logs
-        let filteredLogs = [];   // after filter chip applied
-        let currentPage = 0;
-        let activeFilter = "all";
+            let allLogs = [];   // raw data from /logs
+            let filteredLogs = [];   // after filter chip applied
+            let currentPage = 0;
+            let activeFilter = "all";
+            let threatChart = null;  // Chart.js instance
 
-        // ── Fetch /logs and render everything ───────────────────────────────────
-        async function loadDashboard() {
-            const btn = document.getElementById("refreshBtn");
-            const icon = document.getElementById("refreshIcon");
-            btn.disabled = true;
-            icon.style.display = "inline-block";
-            icon.style.animation = "spin 0.7s linear infinite";
+            // ── Fetch /logs and render everything ───────────────────────────────────
+            async function loadDashboard() {
+                const btn = document.getElementById("refreshBtn");
+                const icon = document.getElementById("refreshIcon");
+                btn.disabled = true;
+                icon.style.display = "inline-block";
+                icon.style.animation = "spin 0.7s linear infinite";
 
-            showTableState("loading");
+                showTableState("loading");
 
-            try {
-                const res = await fetch(`${API_BASE}/logs`);
-                if (!res.ok) throw new Error(`Server returned ${res.status}`);
-                const data = await res.json();
-                allLogs = data.scans;                // get array from new wrapper API
+                try {
+                    const res = await fetch(`${API_BASE}/logs`);
+                    if (!res.ok) throw new Error(`Server returned ${res.status}`);
+                    const data = await res.json();
+                    allLogs = data.scans;                // get array from new wrapper API
+                    currentPage = 0;
+                    applyFilter(activeFilter);           // renders stats + table
+                    document.getElementById("lastUpdated").textContent = nowTimestamp();
+
+                } catch (err) {
+                    showTableState("error", err.message);
+                } finally {
+                    btn.disabled = false;
+                    icon.style.animation = "";
+                }
+            }
+
+            // ── Filter chips ─────────────────────────────────────────────────────────
+            function setFilter(el, filter) {
+                document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+                el.classList.add("active");
+                activeFilter = filter;
                 currentPage = 0;
-                applyFilter(activeFilter);           // renders stats + table
-                document.getElementById("lastUpdated").textContent = nowTimestamp();
-
-            } catch (err) {
-                showTableState("error", err.message);
-            } finally {
-                btn.disabled = false;
-                icon.style.animation = "";
-            }
-        }
-
-        // ── Filter chips ─────────────────────────────────────────────────────────
-        function setFilter(el, filter) {
-            document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
-            el.classList.add("active");
-            activeFilter = filter;
-            currentPage = 0;
-            applyFilter(filter);
-        }
-
-        function applyFilter(filter) {
-            filteredLogs = filter === "all"
-                ? allLogs
-                : allLogs.filter(r => r.status === filter);
-            renderStats();
-            renderTable();
-        }
-
-        // ── Stats cards ──────────────────────────────────────────────────────────
-        function renderStats() {
-            const total = allLogs.length;
-            const phish = allLogs.filter(r => r.status === "Phishing").length;
-            const suspect = allLogs.filter(r => r.status === "Suspicious").length;
-            const safe = allLogs.filter(r => r.status === "Safe").length;
-
-            animNum("statTotal", total);
-            animNum("statPhish", phish);
-            animNum("statSuspect", suspect);
-            animNum("statSafe", safe);
-
-            // Bar widths relative to total
-            const pct = n => total > 0 ? Math.round((n / total) * 100) : 0;
-            setTimeout(() => {
-                setBar("barTotal", 100);
-                setBar("barPhish", pct(phish));
-                setBar("barSuspect", pct(suspect));
-                setBar("barSafe", pct(safe));
-            }, 80);
-        }
-
-        function setBar(id, pct) {
-            document.getElementById(id).style.width = pct + "%";
-        }
-
-        // ── Table rendering ───────────────────────────────────────────────────────
-        function renderTable() {
-            const tbody = document.getElementById("tableBody");
-            const total = filteredLogs.length;
-
-            document.getElementById("rowCount").textContent =
-                total + (total === 1 ? " record" : " records");
-
-            if (total === 0) {
-                showTableState(allLogs.length === 0 ? "empty" : "no-match");
-                updatePager(0, 0);
-                return;
+                applyFilter(filter);
             }
 
-            const start = currentPage * PAGE_SIZE;
-            const end = Math.min(start + PAGE_SIZE, total);
-            const page = filteredLogs.slice(start, end);
+            function applyFilter(filter) {
+                filteredLogs = filter === "all"
+                    ? allLogs
+                    : allLogs.filter(r => r.status === filter);
+                renderStats();
+                renderTable();
+            }
 
-            tbody.innerHTML = "";
-            page.forEach((entry, idx) => {
-                const tier = getTier(entry.risk_score);
-                const tierLabel = { safe: "Safe", warn: "Suspicious", danger: "Phishing" };
-                const rowClass = { safe: "row-safe", warn: "row-warn", danger: "row-danger" };
+            // ── Stats cards ──────────────────────────────────────────────────────────
+            function renderStats() {
+                const total = allLogs.length;
+                const phish = allLogs.filter(r => r.status === "Phishing").length;
+                const suspect = allLogs.filter(r => r.status === "Suspicious").length;
+                const safe = allLogs.filter(r => r.status === "Safe").length;
 
-                const tr = document.createElement("tr");
-                tr.className = rowClass[tier];
-                tr.style.animationDelay = `${idx * 40}ms`;
+                animNum("statTotal", total);
+                animNum("statPhish", phish);
+                animNum("statSuspect", suspect);
+                animNum("statSafe", safe);
 
-                tr.innerHTML = `
+                // Bar widths relative to total
+                const pct = n => total > 0 ? Math.round((n / total) * 100) : 0;
+                setTimeout(() => {
+                    setBar("barTotal", 100);
+                    setBar("barPhish", pct(phish));
+                    setBar("barSuspect", pct(suspect));
+                    setBar("barSafe", pct(safe));
+                }, 80);
+
+                // Update Chart.js
+                updateChart(phish, suspect, safe);
+            }
+
+            function updateChart(phish, suspect, safe) {
+                const ctx = document.getElementById('threatChart').getContext('2d');
+                const data = [phish, suspect, safe];
+
+                if (threatChart) {
+                    threatChart.data.datasets[0].data = data;
+                    threatChart.update();
+                } else {
+                    threatChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Phishing', 'Suspicious', 'Safe'],
+                            datasets: [{
+                                data: data,
+                                backgroundColor: [
+                                    '#ef4444', // Danger red
+                                    '#f59e0b', // Warn orange
+                                    '#10b981'  // Safe green
+                                ],
+                                borderWidth: 0,
+                                hoverOffset: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            cutout: '75%',
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: { color: '#9ca3af', font: { family: "'Inter', sans-serif", size: 12 } }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            function setBar(id, pct) {
+                document.getElementById(id).style.width = pct + "%";
+            }
+
+            // ── Table rendering ───────────────────────────────────────────────────────
+            function renderTable() {
+                const tbody = document.getElementById("tableBody");
+                const total = filteredLogs.length;
+
+                document.getElementById("rowCount").textContent =
+                    total + (total === 1 ? " record" : " records");
+
+                if (total === 0) {
+                    showTableState(allLogs.length === 0 ? "empty" : "no-match");
+                    updatePager(0, 0);
+                    return;
+                }
+
+                const start = currentPage * PAGE_SIZE;
+                const end = Math.min(start + PAGE_SIZE, total);
+                const page = filteredLogs.slice(start, end);
+
+                tbody.innerHTML = "";
+                page.forEach((entry, idx) => {
+                    const tier = getTier(entry.risk_score);
+                    const tierLabel = { safe: "Safe", warn: "Suspicious", danger: "Phishing" };
+                    const rowClass = { safe: "row-safe", warn: "row-warn", danger: "row-danger" };
+
+                    const tr = document.createElement("tr");
+                    tr.className = rowClass[tier];
+                    tr.style.animationDelay = `${idx * 40}ms`;
+
+                    tr.innerHTML = `
           <td class="ts-td" style="color:var(--muted);width:36px">${start + idx + 1}</td>
           <td class="url-td ${tier}" title="${escHtml(entry.url)}">${escHtml(entry.url)}</td>
           <td class="score-td ${tier}">${entry.risk_score}</td>
           <td><span class="badge ${tier}">${tierLabel[tier]}</span></td>
           <td class="ts-td">${fmtTimestamp(entry.timestamp)}</td>
         `;
-                tbody.appendChild(tr);
-            });
+                    tbody.appendChild(tr);
+                });
 
-            updatePager(start, total);
-        }
+                updatePager(start, total);
+            }
 
-        // ── Pagination ────────────────────────────────────────────────────────────
-        function updatePager(start, total) {
-            const end = Math.min(start + PAGE_SIZE, total);
-            document.getElementById("pagingInfo").textContent =
-                total === 0 ? "No records" : `Showing ${start + 1}–${end} of ${total}`;
-            document.getElementById("prevBtn").disabled = currentPage === 0;
-            document.getElementById("nextBtn").disabled = end >= total;
-        }
+            // ── Pagination ────────────────────────────────────────────────────────────
+            function updatePager(start, total) {
+                const end = Math.min(start + PAGE_SIZE, total);
+                document.getElementById("pagingInfo").textContent =
+                    total === 0 ? "No records" : `Showing ${start + 1}–${end} of ${total}`;
+                document.getElementById("prevBtn").disabled = currentPage === 0;
+                document.getElementById("nextBtn").disabled = end >= total;
+            }
 
-        function changePage(delta) {
-            currentPage += delta;
-            renderTable();
-        }
+            function changePage(delta) {
+                currentPage += delta;
+                renderTable();
+            }
 
-        // ── Empty / loading / error states ────────────────────────────────────────
-        function showTableState(type, msg) {
-            const states = {
-                loading: { icon: "⏳", msg: "Fetching scan logs…", sub: "" },
-                empty: { icon: "📭", msg: "No scans recorded yet.", sub: "Run a scan from the Scanner page first." },
-                "no-match": { icon: "🔍", msg: "No results for this filter.", sub: "Try switching to 'All'." },
-                error: { icon: "❌", msg: "Could not load scan logs.", sub: msg || "Is the Flask server running?" },
-            };
-            const s = states[type] || states.error;
-            document.getElementById("tableBody").innerHTML = `
+            // ── Empty / loading / error states ────────────────────────────────────────
+            function showTableState(type, msg) {
+                const states = {
+                    loading: { icon: "⏳", msg: "Fetching scan logs…", sub: "" },
+                    empty: { icon: "📭", msg: "No scans recorded yet.", sub: "Run a scan from the Scanner page first." },
+                    "no-match": { icon: "🔍", msg: "No results for this filter.", sub: "Try switching to 'All'." },
+                    error: { icon: "❌", msg: "Could not load scan logs.", sub: msg || "Is the Flask server running?" },
+                };
+                const s = states[type] || states.error;
+                document.getElementById("tableBody").innerHTML = `
         <tr class="state-row">
           <td colspan="5">
             <span class="state-icon">${s.icon}</span>
@@ -793,55 +847,55 @@
             <div class="state-sub">${s.sub}</div>
           </td>
         </tr>`;
-        }
-
-        // ── Helpers ───────────────────────────────────────────────────────────────
-        function getTier(score) {
-            if (score <= 40) return "safe";
-            if (score <= 70) return "warn";
-            return "danger";
-        }
-
-        function fmtTimestamp(ts) {
-            if (!ts) return "—";
-            // "2026-03-08T16:20:00" → "2026-03-08 16:20"
-            return ts.replace("T", " ").substring(0, 16);
-        }
-
-        function escHtml(str) {
-            return String(str)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;");
-        }
-
-        function nowTimestamp() {
-            return new Date().toLocaleTimeString("en-IN", {
-                hour: "2-digit", minute: "2-digit", second: "2-digit"
-            });
-        }
-
-        function animNum(id, target) {
-            const el = document.getElementById(id);
-            const start = performance.now();
-            const dur = 600;
-            const from = parseInt(el.textContent) || 0;
-            function step(now) {
-                const p = Math.min((now - start) / dur, 1);
-                const e = 1 - Math.pow(1 - p, 3);
-                el.textContent = Math.round(from + (target - from) * e);
-                if (p < 1) requestAnimationFrame(step);
             }
-            requestAnimationFrame(step);
-        }
 
-        // ── Auto-load on page open + auto-refresh every 30s ──────────────────────
-        document.addEventListener("DOMContentLoaded", () => {
-            loadDashboard();
-            setInterval(loadDashboard, 30000);
-        });
-    </script>
+            // ── Helpers ───────────────────────────────────────────────────────────────
+            function getTier(score) {
+                if (score <= 40) return "safe";
+                if (score <= 70) return "warn";
+                return "danger";
+            }
+
+            function fmtTimestamp(ts) {
+                if (!ts) return "—";
+                // "2026-03-08T16:20:00" → "2026-03-08 16:20"
+                return ts.replace("T", " ").substring(0, 16);
+            }
+
+            function escHtml(str) {
+                return String(str)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;");
+            }
+
+            function nowTimestamp() {
+                return new Date().toLocaleTimeString("en-IN", {
+                    hour: "2-digit", minute: "2-digit", second: "2-digit"
+                });
+            }
+
+            function animNum(id, target) {
+                const el = document.getElementById(id);
+                const start = performance.now();
+                const dur = 600;
+                const from = parseInt(el.textContent) || 0;
+                function step(now) {
+                    const p = Math.min((now - start) / dur, 1);
+                    const e = 1 - Math.pow(1 - p, 3);
+                    el.textContent = Math.round(from + (target - from) * e);
+                    if (p < 1) requestAnimationFrame(step);
+                }
+                requestAnimationFrame(step);
+            }
+
+            // ── Auto-load on page open + auto-refresh every 30s ──────────────────────
+            document.addEventListener("DOMContentLoaded", () => {
+                loadDashboard();
+                setInterval(loadDashboard, 30000);
+            });
+        </script>
 </body>
 
 </html>
