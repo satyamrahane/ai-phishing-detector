@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Scanner | PhishGuard AI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#10b77f",
+                        "background-light": "#f6f8f7",
+                        "background-dark": "#10221c",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk"],
+                        "mono": ["JetBrains Mono"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .circuit-bg {
+            background-color: #10221c;
+            background-image:
+                radial-gradient(circle at 2px 2px, rgba(16, 183, 127, 0.05) 1px, transparent 0);
+            background-size: 32px 32px;
+        }
+
+        .glow-border:focus-within {
+            box-shadow: 0 0 15px rgba(16, 183, 127, 0.4);
+            border-color: #10b77f;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen circuit-bg">
+    <div class="layout-container flex h-full grow flex-col">
+        <!-- Top Navigation -->
+        <header
+            class="flex items-center justify-between whitespace-nowrap border-b border-solid border-primary/20 px-10 py-3 bg-background-dark/80 backdrop-blur-md sticky top-0 z-50">
+            <div class="flex items-center gap-4 text-primary">
+                <div class="size-8 flex items-center justify-center bg-primary/10 rounded-lg">
+                    <span class="material-symbols-outlined">shield_with_heart</span>
+                </div>
+                <h2 class="text-slate-100 text-lg font-bold leading-tight tracking-[-0.015em]">PhishGuard AI</h2>
+            </div>
+            <div class="flex flex-1 justify-end gap-8">
+                <nav class="flex items-center gap-9">
+                    <a class="text-slate-300 hover:text-primary transition-colors text-sm font-medium leading-normal"
+                        href="index.html">Home</a>
+                    <a class="text-primary text-sm font-medium leading-normal" href="scanner.html">Scanner</a>
+                    <a class="text-slate-300 hover:text-primary transition-colors text-sm font-medium leading-normal"
+                        href="dashboard.html">Dashboard</a>
+                    <a class="text-slate-300 hover:text-primary transition-colors text-sm font-medium leading-normal"
+                        href="login.html">Login</a>
+                    <a class="text-slate-300 hover:text-primary transition-colors text-sm font-medium leading-normal"
+                        href="report.html">Report</a>
+                </nav>
+                <button
+                    class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-background-dark text-sm font-bold leading-normal transition-all hover:brightness-110">
+                    <span class="truncate">Sign Up</span>
+                </button>
+                <div
+                    class="bg-primary/20 border border-primary/30 rounded-full size-10 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-primary">person</span>
+                </div>
+            </div>
+        </header>
+        <main class="flex-1 flex flex-col items-center py-12 px-4">
+            <div class="w-full max-w-4xl">
+                <!-- Scanner Section -->
+                <div class="text-center mb-10">
+                    <h1 class="text-4xl font-black text-slate-100 mb-2">URL Threat Scanner</h1>
+                    <p class="text-primary/70 text-lg">Paste any URL to analyze it instantly with AI-driven detection
+                    </p>
+                </div>
+                <div class="bg-slate-900/50 border border-primary/20 p-8 rounded-xl backdrop-blur-sm mb-12">
+                    <form id="scanForm" action="#" class="flex flex-col gap-6" method="POST">
+                        <div class="flex flex-col gap-2">
+                            <label class="text-slate-300 text-sm font-medium uppercase tracking-wider ml-1">Target
+                                URL</label>
+                            <div
+                                class="flex items-stretch rounded-lg glow-border transition-all border border-primary/30 bg-background-dark overflow-hidden">
+                                <div
+                                    class="flex items-center justify-center px-4 text-primary/60 border-r border-primary/20">
+                                    <span class="material-symbols-outlined">language</span>
+                                </div>
+                                <input id="urlInput"
+                                    class="form-input flex-1 bg-transparent border-none text-slate-100 placeholder:text-slate-600 h-16 px-6 font-mono text-lg focus:ring-0"
+                                    name="url" placeholder="https://secure-login-example.com/verify" type="text" />
+                                <button
+                                    class="flex items-center justify-center px-8 bg-primary text-background-dark font-bold text-lg hover:brightness-110 transition-all shadow-[0_0_20px_rgba(16,183,127,0.3)]"
+                                    type="submit">
+                                    <span class="material-symbols-outlined mr-2">search_check</span>
+                                    Scan Now
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    <!-- Loading State -->
+                    <div id="loadingState" style="display: none;"
+                        class="mt-12 flex flex-col items-center justify-center space-y-4">
+                        <div class="relative flex items-center justify-center">
+                            <div
+                                class="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin">
+                            </div>
+                            <span class="absolute material-symbols-outlined text-primary text-xl">security</span>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-slate-100 font-bold text-lg animate-pulse">Analyzing URL...</p>
+                            <p class="text-primary/60 text-sm font-mono">Checking 70+ threat engines...</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Result Card -->
+                <div id="resultCard" style="display: none;" class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+                    <div
+                        class="lg:col-span-1 bg-slate-900/80 border-2 border-red-500/30 rounded-xl p-8 flex flex-col items-center justify-center">
+                        <div class="relative size-40 mb-4">
+                            <!-- Circular Gauge -->
+                            <svg class="size-full" viewbox="0 0 100 100">
+                                <circle class="text-slate-800" cx="50" cy="50" fill="transparent" r="40"
+                                    stroke="currentColor" stroke-width="8"></circle>
+                                <circle class="text-red-500" cx="50" cy="50" fill="transparent" r="40"
+                                    stroke="currentColor" stroke-dasharray="251.2" stroke-dashoffset="60"
+                                    stroke-linecap="round" stroke-width="8"></circle>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span id="riskScoreVal" class="text-4xl font-black text-red-500">0</span>
+                                <span class="text-[10px] uppercase font-bold text-slate-400">Risk Score</span>
+                            </div>
+                        </div>
+                        <div id="statusBadge"
+                            class="px-4 py-1 rounded-full bg-red-500/20 border border-red-500/50 text-red-500 font-bold text-sm tracking-widest flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">dangerous</span>
+                            PHISHING
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 bg-slate-900/80 border border-primary/20 rounded-xl p-8">
+                        <div class="space-y-6">
+                            <div>
+                                <h3
+                                    class="text-primary font-bold uppercase text-xs tracking-widest mb-3 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-sm">list_alt</span> Detection Reasons
+                                </h3>
+                                <ul id="reasonsList" class="space-y-2 text-sm text-slate-300">
+                                    <li class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-red-500 text-xs">error</span>
+                                        URL mimics a known financial institution
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-red-500 text-xs">error</span>
+                                        Unusually high number of redirects detected
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-yellow-500 text-xs">warning</span>
+                                        Domain registered within the last 24 hours
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="p-4 rounded-lg bg-background-dark border border-primary/10">
+                                    <p class="text-slate-500 text-[10px] uppercase font-bold mb-1">VirusTotal Results
+                                    </p>
+                                    <p id="vtResults" class="text-slate-100 font-mono text-sm">0 Detections</p>
+                                </div>
+                                <div class="p-4 rounded-lg bg-background-dark border border-primary/10">
+                                    <p class="text-slate-500 text-[10px] uppercase font-bold mb-1">IP Location</p>
+                                    <p class="text-slate-100 font-mono text-sm">Netherlands (NL)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Recent Scans Table -->
+                <div class="bg-slate-900/50 border border-primary/10 rounded-xl overflow-hidden mb-20">
+                    <div class="p-6 border-b border-primary/10 flex justify-between items-center">
+                        <h2 class="text-slate-100 font-bold">Recent Network Activity</h2>
+                        <button class="text-primary text-xs font-bold hover:underline">Clear History</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left font-mono text-sm">
+                            <thead class="bg-background-dark/50 text-slate-500">
+                                <tr>
+                                    <th class="px-6 py-4 font-medium">TARGET URL</th>
+                                    <th class="px-6 py-4 font-medium text-center">SCORE</th>
+                                    <th class="px-6 py-4 font-medium">STATUS</th>
+                                    <th class="px-6 py-4 font-medium">TIMESTAMP</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-primary/5">
+                                <tr class="hover:bg-primary/5 transition-colors">
+                                    <td class="px-6 py-4 text-slate-300 truncate max-w-xs">
+                                        https://paypal-secure.net/update-info</td>
+                                    <td class="px-6 py-4 text-center"><span class="text-red-500 font-bold">89</span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span
+                                            class="px-2 py-0.5 rounded bg-red-500/10 text-red-500 border border-red-500/20 text-[10px] font-bold">MALICIOUS</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-slate-500 text-xs uppercase">2 mins ago</td>
+                                </tr>
+                                <tr class="hover:bg-primary/5 transition-colors">
+                                    <td class="px-6 py-4 text-slate-300 truncate max-w-xs">
+                                        https://github.com/microsoft/vscode</td>
+                                    <td class="px-6 py-4 text-center"><span class="text-primary font-bold">02</span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span
+                                            class="px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold">SECURE</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-slate-500 text-xs uppercase">14 mins ago</td>
+                                </tr>
+                                <tr class="hover:bg-primary/5 transition-colors">
+                                    <td class="px-6 py-4 text-slate-300 truncate max-w-xs">
+                                        https://storage-dropbox-login.com/d/8921</td>
+                                    <td class="px-6 py-4 text-center"><span class="text-yellow-500 font-bold">54</span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span
+                                            class="px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[10px] font-bold">SUSPICIOUS</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-slate-500 text-xs uppercase">1 hour ago</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <!-- Footer -->
+        <footer
+            class="border-t border-primary/10 py-8 px-10 bg-background-dark flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-2 text-primary/60">
+                <span class="material-symbols-outlined text-lg">terminal</span>
+                <span class="font-mono text-xs uppercase tracking-tighter">PhishGuard v2.4.0 Engine</span>
+            </div>
+            <div class="flex gap-6 text-slate-500 text-sm">
+                <a class="hover:text-primary" href="#">API Docs</a>
+                <a class="hover:text-primary" href="#">Privacy</a>
+                <a class="hover:text-primary" href="#">Support</a>
+            </div>
+            <p class="text-slate-600 text-xs font-mono">© 2024 PHISHGUARD_AI_LABS</p>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('scanForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const url = document.getElementById('urlInput').value.trim();
+            if (!url) return;
+
+            // Ensure token available for protected route
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loadingState').style.display = 'flex';
+            document.getElementById('resultCard').style.display = 'none';
+
+            try {
+                const res = await fetch('http://localhost:5000/scan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+
+                if (res.status === 401) {
+                    window.location.href = "login.html";
+                    return;
+                }
+
+                const data = await res.json();
+
+                // Hide loading
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('resultCard').style.display = 'grid';
+
+                // Populate Score
+                const scoreEl = document.getElementById('riskScoreVal');
+                scoreEl.textContent = data.risk_score;
+
+                // Update badge color
+                const badge = document.getElementById('statusBadge');
+                let colorCls = data.status === "Phishing" ? "text-red-500 bg-red-500/20 border-red-500/50" :
+                    data.status === "Suspicious" ? "text-yellow-500 bg-yellow-500/20 border-yellow-500/50" :
+                        "text-green-500 bg-green-500/20 border-green-500/50";
+
+                badge.className = `px-4 py-1 rounded-full border font-bold text-sm tracking-widest flex items-center gap-2 ${colorCls}`;
+                badge.innerHTML = `<span class="material-symbols-outlined text-sm">${data.status === 'Safe' ? 'check_circle' : 'warning'}</span> ${data.status.toUpperCase()}`;
+
+                // Populate Reasons
+                const rList = document.getElementById('reasonsList');
+                rList.innerHTML = '';
+
+                let vtCount = 0;
+                data.reasons.forEach(r => {
+                    const li = document.createElement('li');
+                    li.className = "flex items-center gap-2";
+                    li.innerHTML = `<span class="material-symbols-outlined text-xs">info</span> ${r}`;
+                    rList.appendChild(li);
+
+                    if (r.includes('VirusTotal')) {
+                        const match = r.match(/\((\d+) engines\)/);
+                        if (match) vtCount = match[1];
+                    }
+                });
+
+                document.getElementById('vtResults').textContent = `${vtCount} engines flagged`;
+
+            } catch (e) {
+                alert('Error scanning URL: ' + e);
+                document.getElementById('loadingState').style.display = 'none';
+            }
+        });
+
+    </script>
+</body>
+
+</html>

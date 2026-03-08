@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Login | PhishGuard AI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#10b77f",
+                        "background-light": "#f6f8f7",
+                        "background-dark": "#10221c",
+                        "surface-dark": "#1a332b",
+                        "border-dark": "#23483c"
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        .circuit-pattern {
+            background-color: #10221c;
+            background-image: radial-gradient(#10b77f 0.5px, transparent 0.5px);
+            background-size: 24px 24px;
+            background-position: 0 0, 12px 12px;
+        }
+
+        .glow-shadow {
+            box-shadow: 0 0 20px rgba(16, 183, 127, 0.3);
+        }
+
+        .glow-text {
+            text-shadow: 0 0 10px rgba(16, 183, 127, 0.5);
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased overflow-x-hidden">
+    <div class="flex min-h-screen">
+        <!-- Left Side: Information & Branding -->
+        <div
+            class="hidden lg:flex lg:w-1/2 relative flex-col justify-between p-12 overflow-hidden bg-background-dark border-r border-border-dark">
+            <!-- Decorative Circuit Background -->
+            <div class="absolute inset-0 circuit-pattern opacity-20 pointer-events-none"></div>
+            <div
+                class="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent pointer-events-none">
+            </div>
+            <div class="relative z-10">
+                <div class="flex items-center gap-3 text-primary mb-12">
+                    <span class="material-symbols-outlined text-4xl font-bold">shield</span>
+                    <h1 class="text-2xl font-bold tracking-tight font-display">PhishGuard AI</h1>
+                </div>
+                <div class="space-y-8">
+                    <h2 class="text-5xl font-bold leading-tight max-w-md">
+                        Real-time <span class="text-primary glow-text">Threat Detection</span> Powered by Neural
+                        Networks.
+                    </h2>
+                    <p class="text-slate-400 text-lg max-w-sm font-mono">
+                        Protecting your digital perimeter with advanced heuristic analysis and zero-day protection.
+                    </p>
+                </div>
+            </div>
+            <div class="relative z-10">
+                <div class="grid grid-cols-2 gap-6 max-w-md">
+                    <div class="bg-surface-dark border border-border-dark p-6 rounded-xl">
+                        <p class="text-primary text-3xl font-bold font-mono">2.4M+</p>
+                        <p class="text-slate-400 text-sm mt-1 uppercase tracking-wider">Threats Blocked</p>
+                    </div>
+                    <div class="bg-surface-dark border border-border-dark p-6 rounded-xl">
+                        <p class="text-primary text-3xl font-bold font-mono">150K+</p>
+                        <p class="text-slate-400 text-sm mt-1 uppercase tracking-wider">Active Shields</p>
+                    </div>
+                </div>
+                <div class="mt-12 flex items-center gap-4 text-slate-500">
+                    <div class="flex -space-x-2">
+                        <img class="h-8 w-8 rounded-full border-2 border-background-dark"
+                            data-alt="User avatar thumbnail for security validation"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2tK9eZKLkG1jYC5pUcLcGu9MLZxMzOWUkD3ptG3PA1d4eziEKlVpQ4zvSn2VeGChwbXBvgoOlnzGlSeBC1IuNaf37z72636kUlmAcfYm-zZG4GOAvY9juNNKlTgA_DC6GvncN2df2bwCOXZMJpgti6Tse21oKnBQV80TTsLrJXYIhfy2taXzSNTlqIpGVd6v1BjjdC0cUAOzAnvtGWyTRJSqW-Ib7Hj6JHNG7lmLKduASQoH25NwTK-lb8E3aJ6BsN8AKxwtJLG6c" />
+                        <img class="h-8 w-8 rounded-full border-2 border-background-dark"
+                            data-alt="User avatar thumbnail for security validation"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKDtv1jZWG3Ks-9XWlAkLJoLSBqHKpXv0-68yNVyqm38STfGG1Ndot2WQoDaATaJEe6bdb5OtkyhZq7eJdzI8ApU3h4cl3h5S9WG-et6BECPrYN_qgpNEkB45MOZpFxj5YGXY9I9rVlvuLghFWSF3s790l2rVk-_AOEsX0V_GG1SczvjsM-iUK5pZtkE1cmOP1hxCvuKaQOPPLGSM39QLkeocHXeoe5aYLjqc_e_fAw5sRj9n69owgtmS_SMMBOITVZua9yzmx4RSz" />
+                        <img class="h-8 w-8 rounded-full border-2 border-background-dark"
+                            data-alt="User avatar thumbnail for security validation"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2h3CjwJUjhWW8jjRAKARJAwF_53x83Kt75EVMkisR9jEm1TtnKUiK_jJnsoRCLwlmusm8_-w0bQJg7o8mQfGGBWvuySlqo-fRh4GNMk1qaiL8NBNUnSouWSs9ZJ2-JA9UlNUbd4imc0ePL9MM3mUzqJqI2Y6kzMZk0-Oz4qqE1sflFPBvV_Y8V4gsLnXRr3Z2bKccc0b67CEBfwK1wnigMerm8DKpZTQOVEpZGjfVDMnfv7jImzh5_ZksNrx7vb5_pn2Knqk_mf1M" />
+                    </div>
+                    <p class="text-xs font-mono">Join 50k+ security experts worldwide</p>
+                </div>
+            </div>
+            <!-- Glowing Shield Graphic Placeholder -->
+            <div class="absolute bottom-[-10%] right-[-10%] opacity-20">
+                <span
+                    class="material-symbols-outlined text-[400px] text-primary select-none pointer-events-none">security</span>
+            </div>
+        </div>
+        <!-- Right Side: Auth Form -->
+        <div
+            class="w-full lg:w-1/2 flex flex-col justify-center items-center px-6 py-12 bg-background-light dark:bg-background-dark relative">
+            <div class="w-full max-w-md space-y-8">
+                <!-- Form Header -->
+                <div class="text-center lg:text-left">
+                    <div class="lg:hidden flex justify-center mb-6">
+                        <span class="material-symbols-outlined text-5xl text-primary">shield</span>
+                    </div>
+                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white">Welcome Back</h2>
+                    <p class="text-slate-500 dark:text-slate-400 mt-2">Enter your credentials to access your security
+                        dashboard</p>
+                </div>
+                <!-- Tab Switcher -->
+                <div class="flex border-b border-slate-200 dark:border-border-dark">
+                    <button id="tabSignIn"
+                        class="flex-1 py-4 text-sm font-bold border-b-2 border-primary text-primary">Sign In</button>
+                    <button id="tabSignUp"
+                        class="flex-1 py-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-300 transition-colors">Create
+                        Account</button>
+                </div>
+                <!-- Login Form -->
+                <form id="authForm" action="#" class="space-y-6" method="POST">
+                    <div class="space-y-4">
+
+                        <div id="nameFieldContainer" class="flex flex-col gap-2" style="display: none;">
+                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300 ml-1" for="name">Full
+                                Name</label>
+                            <div class="relative group">
+                                <span
+                                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">person</span>
+                                <input
+                                    class="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-surface-dark border border-slate-200 dark:border-border-dark rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all dark:text-white placeholder:text-slate-500 font-mono"
+                                    id="name" name="name" placeholder="Admin User" type="text" />
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-2">
+                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300 ml-1" for="email">Email
+                                Address</label>
+                            <div class="relative group">
+                                <span
+                                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">mail</span>
+                                <input
+                                    class="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-surface-dark border border-slate-200 dark:border-border-dark rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all dark:text-white placeholder:text-slate-500 font-mono"
+                                    id="email" name="email" placeholder="admin@phishguard.ai" required=""
+                                    type="email" />
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex justify-between items-center px-1">
+                                <label class="text-sm font-medium text-slate-700 dark:text-slate-300"
+                                    for="password">Password</label>
+                                <a class="text-xs text-primary hover:underline font-medium" href="#">Forgot
+                                    Password?</a>
+                            </div>
+                            <div class="relative group">
+                                <span
+                                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">lock</span>
+                                <input
+                                    class="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-surface-dark border border-slate-200 dark:border-border-dark rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all dark:text-white placeholder:text-slate-500 font-mono"
+                                    id="password" name="password" placeholder="••••••••" required="" type="password" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center gap-2 cursor-pointer group">
+                            <div class="relative">
+                                <input class="peer hidden" type="checkbox" />
+                                <div
+                                    class="h-5 w-5 rounded border border-slate-300 dark:border-border-dark bg-slate-100 dark:bg-surface-dark peer-checked:bg-primary peer-checked:border-primary transition-all">
+                                </div>
+                                <span
+                                    class="material-symbols-outlined absolute inset-0 text-white text-[16px] flex items-center justify-center opacity-0 peer-checked:opacity-100 transition-opacity">check</span>
+                            </div>
+                            <span
+                                class="text-sm text-slate-600 dark:text-slate-400 group-hover:text-slate-300 transition-colors">Remember
+                                this device</span>
+                        </label>
+                    </div>
+                    <button id="submitBtn"
+                        class="w-full py-4 bg-primary text-background-dark font-bold rounded-lg hover:bg-primary/90 transition-all glow-shadow transform active:scale-[0.98] flex items-center justify-center gap-2"
+                        type="submit">
+                        <span class="material-symbols-outlined">login</span>
+                        <span>SIGN IN TO DASHBOARD</span>
+                    </button>
+                </form>
+                <!-- Divider -->
+                <div class="relative py-4">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-slate-200 dark:border-border-dark"></div>
+                    </div>
+                    <div class="relative flex justify-center text-xs uppercase">
+                        <span class="bg-background-light dark:bg-background-dark px-4 text-slate-500 font-mono">Or
+                            continue with SSO</span>
+                    </div>
+                </div>
+                <!-- Social Logins -->
+                <div class="grid grid-cols-2 gap-4">
+                    <button
+                        class="flex items-center justify-center gap-2 py-3 px-4 border border-slate-200 dark:border-border-dark rounded-lg hover:bg-slate-100 dark:hover:bg-primary/5 transition-all">
+                        <img alt="Google Logo" class="h-5 w-5" data-alt="Google authentication logo icon"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTucmOlw0rWZ2q-ILYx4sVEcNB-ck6HrWU8eXoU0dLRPQuU7LPnsQtzodLbG8y4Xg4Fg_jwSni3fpIurgV3Ny5Mg3x-AoTcdp7bh2g67xECxbZ6EOABhwKizuzlibganFtt1iTtxGKUZG9Klo6iZQbRcIh0Dnld4fqfubPIcoE-qdMjnNMfPReUbV0DL9yVoGl4IxHZJre6MtTrbRvb7wjEJo5bKKMxJrBa8o3IiAwVYJGywK4W7hzTp_LmyqROinDD6Jczk_MHilj" />
+                        <span class="text-sm font-medium dark:text-slate-300">Google</span>
+                    </button>
+                    <button
+                        class="flex items-center justify-center gap-2 py-3 px-4 border border-slate-200 dark:border-border-dark rounded-lg hover:bg-slate-100 dark:hover:bg-primary/5 transition-all">
+                        <img alt="Github Logo" class="h-5 w-5 dark:invert" data-alt="Github authentication logo icon"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1GAwNX9LbOKCwbQbI2RnYMr-jvW4K8HKeVKgkuZubLALP0hARpEnXkO42sF5ZLAHhBiht6yHqRELIhX35dsfpFE0eALoa1lLI_ZgDT3bolCd5d03qe-yV183BjoCSNT7NLkLbcwzx1uMjRrazUOqc9lwT6zrAOzmhBTDyQoKpCkCJtQ6bc9tGyLbElDNscU-4Q7iVqpOJnU_OG6ApCukWv93H2qHqR2-XCch2fvpMFvyj_Asnay2crz9yBpi6EBXctdy4wBaqu9-T" />
+                        <span class="text-sm font-medium dark:text-slate-300">GitHub</span>
+                    </button>
+                </div>
+                <!-- Footer Disclaimer -->
+                <p class="text-center text-xs text-slate-500 dark:text-slate-500 font-mono mt-8">
+                    By accessing PhishGuard AI, you agree to our
+                    <a class="text-primary hover:underline" href="#">Security Protocols</a> and
+                    <a class="text-primary hover:underline" href="#">Privacy Terms</a>.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isRegister = false;
+        const tabSignIn = document.getElementById('tabSignIn');
+        const tabSignUp = document.getElementById('tabSignUp');
+        const nameField = document.getElementById('nameFieldContainer');
+        const submitBtnSpan = document.querySelector('#submitBtn span:last-child');
+        const authForm = document.getElementById('authForm');
+
+        tabSignIn.addEventListener('click', () => {
+            isRegister = false;
+            tabSignIn.className = "flex-1 py-4 text-sm font-bold border-b-2 border-primary text-primary";
+            tabSignUp.className = "flex-1 py-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-300 transition-colors";
+            nameField.style.display = 'none';
+            submitBtnSpan.textContent = 'SIGN IN TO DASHBOARD';
+        });
+
+        tabSignUp.addEventListener('click', () => {
+            isRegister = true;
+            tabSignUp.className = "flex-1 py-4 text-sm font-bold border-b-2 border-primary text-primary";
+            tabSignIn.className = "flex-1 py-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-300 transition-colors";
+            nameField.style.display = 'flex';
+            submitBtnSpan.textContent = 'CREATE ACCOUNT';
+        });
+
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const name = document.getElementById('name').value;
+
+            const url = isRegister ? 'http://localhost:5000/auth/register' : 'http://localhost:5000/auth/login';
+            const body = isRegister ? { name, email, password } : { email, password };
+
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    localStorage.setItem('token', data.access_token);
+                    window.location.href = 'dashboard.html';
+                } else {
+                    alert('Authentication failed: ' + (data.detail || 'Unknown error'));
+                }
+            } catch (err) {
+                alert('Network error connecting to auth server.');
+            }
+        });
+
+    </script>
+</body>
+
+</html>
