@@ -14,7 +14,7 @@ try:
     _redis_client.ping()
 except Exception as e:
     _redis_client = None
-    print(f"[cache] \u26a0\ufe0f Redis unavailable: {e}. Caching is disabled.")
+    print(f"[cache] WARNING: Redis unavailable: {e}. Caching is disabled.")
 
 def get_cached_result(url: str):
     """

@@ -3,11 +3,14 @@ import os
 import csv
 import io
 import json
+from datetime import datetime
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Response, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
+from authlib.integrations.starlette_client import OAuth
+from starlette.middleware.sessions import SessionMiddleware
 from pydantic import BaseModel
 from typing import List
 
@@ -20,7 +23,7 @@ _current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(_current_dir)
 sys.path.append(os.path.dirname(_current_dir))
 
-from database.db import init_db, get_recent_scans, log_scan, clear_all_scans, create_user, get_user_by_email
+from database.db import init_db, get_recent_scans, log_scan, clear_all_scans, create_user, get_user_by_email, get_db, User
 from utils.cache import get_cached_result, cache_result
 from backend.detector import analyze_url
 from backend.auth import hash_password, verify_password, create_jwt_token, verify_jwt_token
@@ -45,10 +48,24 @@ app = FastAPI(title="AI Phishing Detection API", lifespan=lifespan)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+app.add_middleware(
+    SessionMiddleware, 
+    secret_key=os.getenv("JWT_SECRET", "phishguard-key")
+)
+
+oauth = OAuth()
+oauth.register(
+    name="google",
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+    client_kwargs={"scope": "openid email profile"}
+)
+
 # Restrict CORS to allowed origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:5500"],
+    allow_origins=["http://127.0.0.1:8000", "http://localhost:8000", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -61,6 +78,7 @@ class ScanResponse(BaseModel):
     risk_score: int
     status: str
     reasons: List[str]
+    ip_info: dict = None
     cached: bool = False
 
 class RegisterRequest(BaseModel):
@@ -73,28 +91,89 @@ class LoginRequest(BaseModel):
     password: str
 
 @app.post("/auth/register")
-def register(body: RegisterRequest):
-    user = get_user_by_email(body.email)
-    if user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-        
-    hashed = hash_password(body.password)
-    user_id = create_user(body.name, body.email, hashed)
+async def register(request: RegisterRequest, db=Depends(get_db)):
+    existing = db.query(User).filter(
+        User.email == request.email
+    ).first()
+    if existing:
+        raise HTTPException(
+            status_code=400, 
+            detail="Email already registered"
+        )
+    hashed = hash_password(request.password)
+    user = User(
+        name=request.name,
+        email=request.email,
+        hashed_password=hashed,
+        created_at=json.dumps(datetime.utcnow().isoformat(timespec='seconds')) # Keep consistency if needed, or just isoformat
+    )
+    # Actually looking at db.py, created_at is a String.
+    user.created_at = datetime.utcnow().isoformat(timespec='seconds')
     
-    token = create_jwt_token(user_id, body.email)
-    return {"access_token": token, "token_type": "bearer"}
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    token = create_jwt_token(user.id, user.email)
+    return {"token": token, "email": user.email, "access_token": token, "token_type": "bearer"} # Added access_token for frontend compatibility
 
 @app.post("/auth/login")
-def login(body: LoginRequest):
-    user = get_user_by_email(body.email)
+async def login(request: LoginRequest, db=Depends(get_db)):
+    user = db.query(User).filter(
+        User.email == request.email
+    ).first()
+    if not user or not verify_password(
+        request.password, user.hashed_password
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid email or password"
+        )
+    token = create_jwt_token(user.id, user.email)
+    return {"token": token, "email": user.email, "access_token": token, "token_type": "bearer"} # Added access_token for frontend compatibility
+
+@app.get("/auth/google")
+async def google_login(request: Request):
+    redirect_uri = "http://127.0.0.1:5000/auth/google/callback"
+    return await oauth.google.authorize_redirect(
+        request, redirect_uri
+    )
+
+@app.get("/auth/google/callback")
+async def google_callback(request: Request, db=Depends(get_db)):
+    try:
+        token = await oauth.google.authorize_access_token(request)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Google auth failed: {str(e)}")
+        
+    userinfo = token.get("userinfo")
+    if not userinfo:
+        raise HTTPException(status_code=400, detail="Could not get user info from Google")
+        
+    email = userinfo["email"]
+    name = userinfo.get("name", email)
+    user = db.query(User).filter(User.email == email).first()
     if not user:
-        raise HTTPException(status_code=401, detail="Invalid email or password")
+        user = User(
+            name=name,
+            email=email,
+            hashed_password=hash_password(
+                os.urandom(32).hex()
+            ),
+            created_at=datetime.utcnow().isoformat(timespec='seconds')
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
         
-    if not verify_password(body.password, user["hashed_password"]):
-        raise HTTPException(status_code=401, detail="Invalid email or password")
-        
-    token = create_jwt_token(user["id"], user["email"])
-    return {"access_token": token, "token_type": "bearer"}
+    jwt_token = create_jwt_token(user.id, user.email)
+    frontend_url = os.getenv("FRONTEND_URL", "http://127.0.0.1:8000")
+    return RedirectResponse(
+        url=f"{frontend_url}/dashboard.html?token={jwt_token}"
+    )
+
+@app.get("/auth/github") 
+async def github_login():
+    return {"message": "GitHub OAuth portal coming soon. For now, please use manual login."}
 
 @app.post("/scan", response_model=ScanResponse)
 @limiter.limit("30/minute")

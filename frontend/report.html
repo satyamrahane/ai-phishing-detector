@@ -1,13 +1,22 @@
 <!DOCTYPE html>
 
-<html class="dark" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
             theme: {
@@ -23,266 +32,356 @@
                         "display": ["Space Grotesk", "sans-serif"],
                         "mono": ["JetBrains Mono", "monospace"]
                     },
-                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
                 },
             },
         }
     </script>
-<style>
+    <style>
         .circuit-pattern {
             background-image: radial-gradient(circle at 2px 2px, rgba(16, 183, 127, 0.05) 1px, transparent 0);
             background-size: 24px 24px;
         }
+
         .glow-red {
             box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
         }
+
         .glow-green {
             box-shadow: 0 0 15px rgba(16, 183, 127, 0.3);
         }
     </style>
 </head>
-<body class="bg-background-light dark:bg-background-dark font-mono text-slate-900 dark:text-slate-100 circuit-pattern min-h-screen">
-<div class="layout-container flex h-full grow flex-col">
-<!-- Top Navigation -->
-<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-primary/20 px-6 py-4 bg-background-dark/80 backdrop-blur-md sticky top-0 z-50">
-<div class="flex items-center gap-4 text-primary">
-<div class="size-8 flex items-center justify-center">
-<span class="material-symbols-outlined text-3xl">shield_with_heart</span>
-</div>
-<h2 class="text-xl font-bold leading-tight tracking-tight font-display">PhishGuard AI</h2>
-</div>
-<div class="flex flex-1 justify-end gap-8 items-center">
-<nav class="hidden md:flex items-center gap-8">
-<a class="text-slate-300 hover:text-primary transition-colors text-sm font-medium" href="dashboard.html">Dashboard</a>
-<a class="text-slate-300 hover:text-primary transition-colors text-sm font-medium" href="#">Threat Map</a>
-<a class="text-slate-300 hover:text-primary transition-colors text-sm font-medium underline underline-offset-4 decoration-primary" href="#">Scans</a>
-<a class="text-slate-300 hover:text-primary transition-colors text-sm font-medium" href="#">Settings</a>
-</nav>
-<div class="h-10 w-10 rounded-full border border-primary/50 bg-primary/10 flex items-center justify-center overflow-hidden">
-<img alt="User Avatar" class="w-full h-full object-cover" data-alt="Abstract geometric user profile icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNBSoJTc2wk1oAc4Kk63RLH_dqoeiE1eZcV3WGCkyPEiOJiSHG9QTb0lgxksv2vChfPTeBen7EfDiuaawCuM58l0EqmR07QsjrGjQuB_6S4MSTLgHgUHRR_ZrAED65OZJa3QQRgLZO5Ow9idxvU03QrCLB6884rXfA7OTTB4Lh3FVtIxD6CV-jmN-6832cTWaUfOBDv3uJ3mYS9RgSCInOzrynLMmLXwCmYrutWCYYgmOMNm1gB2Srx67YBFUq7ry2wws-gWv8FbNq"/>
-</div>
-</div>
-</header>
-<main class="max-w-7xl mx-auto w-full px-6 py-8">
-<!-- Report Header -->
-<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 border-l-4 border-danger pl-6 py-2 bg-danger/5">
-<div>
-<h1 class="text-3xl font-bold font-display text-slate-100">Threat Analysis Report</h1>
-<div class="flex items-center gap-2 mt-1">
-<span class="material-symbols-outlined text-danger text-sm">link</span>
-<p class="text-danger font-mono text-sm break-all">https://secure-login-update-verify.com/auth-id-99281</p>
-</div>
-</div>
-<div class="flex gap-3">
-<button class="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 text-primary rounded-lg hover:bg-primary/20 transition-all font-bold text-sm">
-<span class="material-symbols-outlined text-lg">refresh</span> RE-SCAN URL
+
+<body
+    class="bg-background-light dark:bg-background-dark font-mono text-slate-900 dark:text-slate-100 circuit-pattern min-h-screen">
+    <div class="layout-container flex h-full grow flex-col">
+        <!-- Top Navigation -->
+        <header
+            class="flex items-center justify-between whitespace-nowrap border-b border-solid border-primary/20 px-6 py-4 bg-background-dark/80 backdrop-blur-md sticky top-0 z-50">
+            <div class="flex items-center gap-4 text-primary">
+                <div class="size-8 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-3xl">shield_with_heart</span>
+                </div>
+                <h2 class="text-xl font-bold leading-tight tracking-tight font-display">PhishGuard AI</h2>
+            </div>
+            <div class="flex flex-1 justify-end gap-8 items-center">
+                <nav class="hidden md:flex items-center gap-8">
+                    <a class="text-slate-300 hover:text-primary transition-colors text-sm font-medium"
+                        href="dashboard.html">Dashboard</a>
+                    <a class="text-slate-300 hover:text-primary transition-colors text-sm font-medium" href="#">Threat
+                        Map</a>
+                    <a class="text-slate-300 hover:text-primary transition-colors text-sm font-medium underline underline-offset-4 decoration-primary"
+                        href="scanner.html">Scans</a>
+                    <a class="text-slate-300 hover:text-primary transition-colors text-sm font-medium"
+                        href="#">Settings</a>
+                </nav>
+                <div
+                    class="h-10 w-10 rounded-full border border-primary/50 bg-primary/10 flex items-center justify-center overflow-hidden">
+                    <img alt="User Avatar" class="w-full h-full object-cover"
+                        data-alt="Abstract geometric user profile icon"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNBSoJTc2wk1oAc4Kk63RLH_dqoeiE1eZcV3WGCkyPEiOJiSHG9QTb0lgxksv2vChfPTeBen7EfDiuaawCuM58l0EqmR07QsjrGjQuB_6S4MSTLgHgUHRR_ZrAED65OZJa3QQRgLZO5Ow9idxvU03QrCLB6884rXfA7OTTB4Lh3FVtIxD6CV-jmN-6832cTWaUfOBDv3uJ3mYS9RgSCInOzrynLMmLXwCmYrutWCYYgmOMNm1gB2Srx67YBFUq7ry2wws-gWv8FbNq" />
+                </div>
+            </div>
+        </header>
+        <main class="max-w-7xl mx-auto w-full px-6 py-8">
+            <!-- Report Header -->
+            <div id="alertBox"
+                class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 border-l-4 border-danger pl-6 py-2 bg-danger/5">
+                <div>
+                    <h1 class="text-3xl font-bold font-display text-slate-100">Threat Analysis Report</h1>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="material-symbols-outlined text-danger text-sm">link</span>
+                        <p id="targetUrlText" class="text-danger font-mono text-sm break-all">
+                            https://secure-login-update-verify.com/auth-id-99281</p>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button
+                        class="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 text-primary rounded-lg hover:bg-primary/20 transition-all font-bold text-sm">
+                        <span class="material-symbols-outlined text-lg">refresh</span> RE-SCAN URL
                     </button>
-<button class="flex items-center gap-2 px-4 py-2 bg-slate-800 border border-slate-700 text-slate-100 rounded-lg hover:bg-slate-700 transition-all font-bold text-sm">
-<span class="material-symbols-outlined text-lg">download</span> DOWNLOAD PDF
+                    <button
+                        class="flex items-center gap-2 px-4 py-2 bg-slate-800 border border-slate-700 text-slate-100 rounded-lg hover:bg-slate-700 transition-all font-bold text-sm">
+                        <span class="material-symbols-outlined text-lg">download</span> DOWNLOAD PDF
                     </button>
-</div>
-</div>
-<!-- Top Grid: Score & Overview -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-<!-- Risk Gauge -->
-<div class="lg:col-span-1 bg-slate-900/50 border border-danger/30 rounded-xl p-8 flex flex-col items-center justify-center glow-red relative overflow-hidden">
-<div class="absolute top-0 right-0 p-2">
-<span class="material-symbols-outlined text-danger/20 text-6xl rotate-12">warning</span>
-</div>
-<div class="relative flex items-center justify-center mb-4">
-<svg class="w-48 h-48 transform -rotate-90">
-<circle class="text-slate-800" cx="96" cy="96" fill="transparent" r="88" stroke="currentColor" stroke-width="12"></circle>
-<circle class="text-danger" cx="96" cy="96" fill="transparent" r="88" stroke="currentColor" stroke-dasharray="552.92" stroke-dashoffset="11" stroke-width="12"></circle>
-</svg>
-<div class="absolute flex flex-col items-center">
-<span class="text-5xl font-bold text-slate-100">98</span>
-<span class="text-xs uppercase tracking-widest text-danger font-bold">Risk Score</span>
-</div>
-</div>
-<p class="text-danger font-bold text-center">CRITICAL THREAT DETECTED</p>
-<p class="text-slate-400 text-xs text-center mt-2">Highly likely to be a phishing attempt targeting financial credentials.</p>
-</div>
-<!-- AI Analysis Flags -->
-<div class="lg:col-span-2 bg-slate-900/50 border border-primary/20 rounded-xl p-6">
-<h3 class="text-lg font-bold mb-4 flex items-center gap-2">
-<span class="material-symbols-outlined text-primary">psychology</span> AI Analysis Findings
-                    </h3>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-<div class="p-4 bg-background-dark border border-danger/20 rounded-lg">
-<div class="flex items-center gap-2 text-danger mb-2">
-<span class="material-symbols-outlined text-sm">error</span>
-<span class="text-xs font-bold uppercase">Homograph Attack</span>
-</div>
-<p class="text-sm text-slate-300 leading-relaxed">URL uses Cyrillic 'а' to mimic legitimate 'apple.com' structure.</p>
-</div>
-<div class="p-4 bg-background-dark border border-danger/20 rounded-lg">
-<div class="flex items-center gap-2 text-danger mb-2">
-<span class="material-symbols-outlined text-sm">error</span>
-<span class="text-xs font-bold uppercase">Brand Mimicry</span>
-</div>
-<p class="text-sm text-slate-300 leading-relaxed">Visual analysis shows 94% similarity to Microsoft login page.</p>
-</div>
-<div class="p-4 bg-background-dark border border-warning/20 rounded-lg">
-<div class="flex items-center gap-2 text-warning mb-2">
-<span class="material-symbols-outlined text-sm">priority_high</span>
-<span class="text-xs font-bold uppercase">Urgency Tones</span>
-</div>
-<p class="text-sm text-slate-300 leading-relaxed">Content contains social engineering triggers: "Account Suspended", "Immediate Action".</p>
-</div>
-<div class="p-4 bg-background-dark border border-primary/20 rounded-lg">
-<div class="flex items-center gap-2 text-primary mb-2">
-<span class="material-symbols-outlined text-sm">check_circle</span>
-<span class="text-xs font-bold uppercase">SSL Valid</span>
-</div>
-<p class="text-sm text-slate-300 leading-relaxed">Domain has valid DV SSL certificate (common in modern phishing).</p>
-</div>
-</div>
-</div>
-</div>
-<!-- Forensic Details & Community -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-<!-- Forensic Details -->
-<div class="bg-slate-900/50 border border-slate-800 rounded-xl p-6">
-<h3 class="text-lg font-bold mb-4 flex items-center gap-2">
-<span class="material-symbols-outlined text-primary">terminal</span> Forensic Details
-                    </h3>
-<div class="space-y-3">
-<div class="flex justify-between py-2 border-b border-slate-800/50">
-<span class="text-slate-500 text-sm">Domain Age</span>
-<span class="text-slate-100 text-sm font-bold">4 days, 12 hours</span>
-</div>
-<div class="flex justify-between py-2 border-b border-slate-800/50">
-<span class="text-slate-500 text-sm">IP Address</span>
-<span class="text-slate-100 text-sm font-bold underline decoration-dotted">192.168.44.201</span>
-</div>
-<div class="flex justify-between py-2 border-b border-slate-800/50">
-<span class="text-slate-500 text-sm">Nameservers</span>
-<div class="text-right">
-<div class="text-slate-100 text-sm font-bold">ns1.cheaphost.net</div>
-<div class="text-slate-100 text-sm font-bold">ns2.cheaphost.net</div>
-</div>
-</div>
-<div class="flex justify-between py-2 border-b border-slate-800/50">
-<span class="text-slate-500 text-sm">Registrant</span>
-<span class="text-slate-100 text-sm font-bold">Privacy Guardian Ltd.</span>
-</div>
-<div class="flex justify-between py-2">
-<span class="text-slate-500 text-sm">SSL Issuer</span>
-<span class="text-slate-100 text-sm font-bold">Let's Encrypt R3</span>
-</div>
-</div>
-</div>
-<!-- Community Feedback -->
-<div class="bg-slate-900/50 border border-slate-800 rounded-xl p-6">
-<h3 class="text-lg font-bold mb-4 flex items-center gap-2">
-<span class="material-symbols-outlined text-primary">groups</span> Community Feedback
-                    </h3>
-<div class="space-y-4">
-<div class="flex items-center justify-between p-3 bg-background-dark rounded-lg">
-<div class="flex items-center gap-3">
-<div class="size-10 bg-slate-800 rounded flex items-center justify-center">
-<span class="material-symbols-outlined text-danger">coronavirus</span>
-</div>
-<div>
-<p class="text-sm font-bold">VirusTotal</p>
-<p class="text-xs text-slate-500">48/72 engines malicious</p>
-</div>
-</div>
-<span class="px-2 py-1 bg-danger/20 text-danger text-[10px] font-bold rounded">BLACKLISTED</span>
-</div>
-<div class="flex items-center justify-between p-3 bg-background-dark rounded-lg">
-<div class="flex items-center gap-3">
-<div class="size-10 bg-slate-800 rounded flex items-center justify-center">
-<span class="material-symbols-outlined text-danger">g_translate</span>
-</div>
-<div>
-<p class="text-sm font-bold">Google Safe Browsing</p>
-<p class="text-xs text-slate-500">Flagged for social engineering</p>
-</div>
-</div>
-<span class="px-2 py-1 bg-danger/20 text-danger text-[10px] font-bold rounded">UNSAFE</span>
-</div>
-<div class="flex items-center justify-between p-3 bg-background-dark rounded-lg">
-<div class="flex items-center gap-3">
-<div class="size-10 bg-slate-800 rounded flex items-center justify-center">
-<span class="material-symbols-outlined text-primary">verified_user</span>
-</div>
-<div>
-<p class="text-sm font-bold">PhishTank</p>
-<p class="text-xs text-slate-500">Verified as phishing (ID: 72881)</p>
-</div>
-</div>
-<span class="px-2 py-1 bg-danger/20 text-danger text-[10px] font-bold rounded">CONFIRMED</span>
-</div>
-</div>
-</div>
-</div>
-<!-- Geographic Distribution -->
-<div class="bg-slate-900/50 border border-slate-800 rounded-xl p-6 mb-8 overflow-hidden">
-<div class="flex justify-between items-center mb-6">
-<h3 class="text-lg font-bold flex items-center gap-2">
-<span class="material-symbols-outlined text-primary">public</span> Geographic Distribution
-                    </h3>
-<div class="text-right">
-<p class="text-xs text-slate-500 uppercase tracking-tighter">Server Location</p>
-<p class="text-sm font-bold text-slate-100">Reykjavik, Iceland (IS)</p>
-</div>
-</div>
-<div class="h-64 rounded-lg bg-slate-950 relative overflow-hidden flex items-center justify-center border border-slate-800">
-<div class="absolute inset-0 opacity-40 bg-[url('https://placeholder.pics/svg/1200x400')] bg-cover bg-center" data-alt="Stylized dark digital world map with Iceland highlighted" data-location="Iceland" style=""></div>
-<div class="z-10 flex flex-col items-center">
-<div class="size-12 rounded-full bg-danger/20 border border-danger flex items-center justify-center animate-pulse glow-red">
-<span class="material-symbols-outlined text-danger">location_on</span>
-</div>
-<div class="mt-2 bg-slate-900/90 backdrop-blur px-3 py-1 rounded text-xs border border-danger/50 text-slate-100">
-                            HOST: Orange-Cloud Data Center
+                </div>
+            </div>
+            <!-- Top Grid: Score & Overview -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Risk Gauge -->
+                <div
+                    class="lg:col-span-1 bg-slate-900/50 border border-danger/30 rounded-xl p-8 flex flex-col items-center justify-center glow-red relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-2">
+                        <span class="material-symbols-outlined text-danger/20 text-6xl rotate-12">warning</span>
+                    </div>
+                    <div class="relative flex items-center justify-center mb-4">
+                        <svg class="w-48 h-48 transform -rotate-90">
+                            <circle class="text-slate-800" cx="96" cy="96" fill="transparent" r="88"
+                                stroke="currentColor" stroke-width="12"></circle>
+                            <circle id="scoreCircle" class="text-danger" cx="96" cy="96" fill="transparent" r="88"
+                                stroke="currentColor" stroke-dasharray="552.92" stroke-dashoffset="11"
+                                stroke-width="12"></circle>
+                        </svg>
+                        <div class="absolute flex flex-col items-center">
+                            <span id="riskScoreBig" class="text-5xl font-bold text-slate-100">98</span>
+                            <span class="text-xs uppercase tracking-widest text-danger font-bold">Risk Score</span>
                         </div>
-</div>
-<!-- Circuit Overlay Effect -->
-<div class="absolute top-0 left-0 w-full h-full pointer-events-none bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60"></div>
-</div>
-</div>
-<!-- Action Footer -->
-<div class="flex flex-col md:flex-row justify-between items-center p-6 bg-slate-900/80 border border-slate-800 rounded-xl gap-4">
-<p class="text-slate-400 text-sm">
+                    </div>
+                    <p id="statusText" class="text-danger font-bold text-center">CRITICAL THREAT DETECTED</p>
+                    <p class="text-slate-400 text-xs text-center mt-2">Highly likely to be a phishing attempt targeting
+                        financial credentials.</p>
+                </div>
+                <!-- AI Analysis Flags -->
+                <div class="lg:col-span-2 bg-slate-900/50 border border-primary/20 rounded-xl p-6">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">psychology</span> AI Analysis Findings
+                    </h3>
+                    <div id="findingsList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="p-4 bg-background-dark border border-danger/20 rounded-lg">
+                            <div class="flex items-center gap-2 text-danger mb-2">
+                                <span class="material-symbols-outlined text-sm">error</span>
+                                <span class="text-xs font-bold uppercase">Homograph Attack</span>
+                            </div>
+                            <p class="text-sm text-slate-300 leading-relaxed">URL uses Cyrillic 'а' to mimic legitimate
+                                'apple.com' structure.</p>
+                        </div>
+                        <div class="p-4 bg-background-dark border border-danger/20 rounded-lg">
+                            <div class="flex items-center gap-2 text-danger mb-2">
+                                <span class="material-symbols-outlined text-sm">error</span>
+                                <span class="text-xs font-bold uppercase">Brand Mimicry</span>
+                            </div>
+                            <p class="text-sm text-slate-300 leading-relaxed">Visual analysis shows 94% similarity to
+                                Microsoft login page.</p>
+                        </div>
+                        <div class="p-4 bg-background-dark border border-warning/20 rounded-lg">
+                            <div class="flex items-center gap-2 text-warning mb-2">
+                                <span class="material-symbols-outlined text-sm">priority_high</span>
+                                <span class="text-xs font-bold uppercase">Urgency Tones</span>
+                            </div>
+                            <p class="text-sm text-slate-300 leading-relaxed">Content contains social engineering
+                                triggers: "Account Suspended", "Immediate Action".</p>
+                        </div>
+                        <div class="p-4 bg-background-dark border border-primary/20 rounded-lg">
+                            <div class="flex items-center gap-2 text-primary mb-2">
+                                <span class="material-symbols-outlined text-sm">check_circle</span>
+                                <span class="text-xs font-bold uppercase">SSL Valid</span>
+                            </div>
+                            <p class="text-sm text-slate-300 leading-relaxed">Domain has valid DV SSL certificate
+                                (common in modern phishing).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Forensic Details & Community -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- Forensic Details -->
+                <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-6">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">terminal</span> Forensic Details
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between py-2 border-b border-slate-800/50">
+                            <span class="text-slate-500 text-sm">Domain Age</span>
+                            <span class="text-slate-100 text-sm font-bold">4 days, 12 hours</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-slate-800/50">
+                            <span class="text-slate-500 text-sm">IP Address</span>
+                            <span id="detectedIp"
+                                class="text-slate-100 text-sm font-bold underline decoration-dotted">192.168.44.201</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-slate-800/50">
+                            <span class="text-slate-500 text-sm">Nameservers</span>
+                            <div class="text-right">
+                                <div class="text-slate-100 text-sm font-bold">ns1.cheaphost.net</div>
+                                <div class="text-slate-100 text-sm font-bold">ns2.cheaphost.net</div>
+                            </div>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-slate-800/50">
+                            <span class="text-slate-500 text-sm">ISP / Datacenter</span>
+                            <span id="ispName" class="text-slate-100 text-sm font-bold">Privacy Guardian Ltd.</span>
+                        </div>
+                        <div class="flex justify-between py-2">
+                            <span class="text-slate-500 text-sm">SSL Issuer</span>
+                            <span class="text-slate-100 text-sm font-bold">Let's Encrypt R3</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Community Feedback -->
+                <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-6">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">groups</span> Community Feedback
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-3 bg-background-dark rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <div class="size-10 bg-slate-800 rounded flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-danger">coronavirus</span>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold">VirusTotal</p>
+                                    <p class="text-xs text-slate-500">48/72 engines malicious</p>
+                                </div>
+                            </div>
+                            <span
+                                class="px-2 py-1 bg-danger/20 text-danger text-[10px] font-bold rounded">BLACKLISTED</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-background-dark rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <div class="size-10 bg-slate-800 rounded flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-danger">g_translate</span>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold">Google Safe Browsing</p>
+                                    <p class="text-xs text-slate-500">Flagged for social engineering</p>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 bg-danger/20 text-danger text-[10px] font-bold rounded">UNSAFE</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-background-dark rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <div class="size-10 bg-slate-800 rounded flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-primary">verified_user</span>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold">PhishTank</p>
+                                    <p class="text-xs text-slate-500">Verified as phishing (ID: 72881)</p>
+                                </div>
+                            </div>
+                            <span
+                                class="px-2 py-1 bg-danger/20 text-danger text-[10px] font-bold rounded">CONFIRMED</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Geographic Distribution -->
+            <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-6 mb-8 overflow-hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">public</span> Geographic Distribution
+                    </h3>
+                    <div class="text-right">
+                        <p class="text-xs text-slate-500 uppercase tracking-tighter">Server Location</p>
+                        <p id="serverBrand" class="text-sm font-bold text-slate-100">Reykjavik, Iceland (IS)</p>
+                    </div>
+                </div>
+                <div id="map" class="h-64 rounded-lg bg-slate-950 border border-slate-800 z-10"></div>
+            </div>
+            <!-- Action Footer -->
+            <div
+                class="flex flex-col md:flex-row justify-between items-center p-6 bg-slate-900/80 border border-slate-800 rounded-xl gap-4">
+                <p class="text-slate-400 text-sm">
                     Report generated on <span class="text-slate-200">2023-11-24 14:22:11 UTC</span>
-</p>
-<div class="flex gap-4">
-<a class="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors" href="#">
-<span class="material-symbols-outlined text-lg">arrow_back</span> Back to Dashboard
+                </p>
+                <div class="flex gap-4">
+                    <a id="backBtn"
+                        class="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors"
+                        href="#">
+                        <span class="material-symbols-outlined text-lg">arrow_back</span> Back to Dashboard
                     </a>
-<button class="px-6 py-2 bg-danger text-white rounded-lg hover:bg-danger/80 transition-all font-bold text-sm glow-red">
+                    <button
+                        class="px-6 py-2 bg-danger text-white rounded-lg hover:bg-danger/80 transition-all font-bold text-sm glow-red">
                         BLOCK DOMAIN IN FIREWALL
                     </button>
-</div>
-</div>
-</main>
-</div>
-</body></html>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>
 <script>
-document.addEventListener('DOMContentLoaded', async () => {
-    const params = new URLSearchParams(window.location.search);
-    const url = params.get('url');
-    if(!url) return;
+    document.addEventListener('DOMContentLoaded', async () => {
+        const params = new URLSearchParams(window.location.search);
+        const url = params.get('url');
+        if (!url) {
+            alert("No URL provided for analysis.");
+            return;
+        }
 
-    // Typically you'd have a /scan or /logs/details endpoint, but here we can just execute a scan check locally
-    const token = localStorage.getItem('token');
-    if(!token) { window.location.href = 'login.html'; return; }
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
+            return;
+        }
 
-    try {
-        const res = await fetch('http://localhost:5000/scan', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify({ url: url })
-        });
-        const data = await res.json();
-        
-        // Find safe/target elements and append raw URL
-        let urlEl = document.querySelector('h1 + p');
-        if(urlEl) urlEl.innerText = url;
-    } catch(e) {}
-});
+        // Initialize Map Placeholder (centered at 0,0)
+        const map = L.map('map').setView([0, 0], 2);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap &copy; CARTO'
+        }).addTo(map);
+
+        try {
+            const res = await fetch('http://127.0.0.1:5000/scan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ url: url })
+            });
+
+            if (res.status === 401) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const data = await res.json();
+
+            // Update UI with real data
+            document.getElementById('targetUrlText').textContent = url;
+            document.getElementById('riskScoreBig').textContent = data.risk_score;
+            document.getElementById('statusText').textContent = data.status.toUpperCase() + (data.status === 'Safe' ? ' SITE' : ' THREAT DETECTED');
+
+            // Adjust colors based on status
+            const scoreCircle = document.getElementById('scoreCircle');
+            const alertBox = document.getElementById('alertBox');
+            if (data.status === 'Safe') {
+                scoreCircle.setAttribute('class', 'text-primary');
+                alertBox.classList.replace('border-danger', 'border-primary');
+                alertBox.classList.replace('bg-danger/5', 'bg-primary/5');
+            } else if (data.status === 'Suspicious') {
+                scoreCircle.setAttribute('class', 'text-warning');
+                alertBox.classList.replace('border-danger', 'border-warning');
+                alertBox.classList.replace('bg-danger/5', 'bg-warning/5');
+            }
+
+            // Forensic Details
+            document.getElementById('detectedIp').textContent = data.ip_info.ip;
+            document.getElementById('serverBrand').textContent = `${data.ip_info.city}, ${data.ip_info.country}`;
+            document.getElementById('ispName').textContent = data.ip_info.isp;
+
+            // Map Update
+            if (data.ip_info.lat && data.ip_info.lon) {
+                map.setView([data.ip_info.lat, data.ip_info.lon], 6);
+                L.marker([data.ip_info.lat, data.ip_info.lon]).addTo(map)
+                    .bindPopup(`<b>Server IP:</b> ${data.ip_info.ip}<br><b>Location:</b> ${data.ip_info.city}, ${data.ip_info.country}`)
+                    .openPopup();
+            }
+
+            // Populate Reasons
+            const findingsList = document.getElementById('findingsList');
+            findingsList.innerHTML = '';
+            data.reasons.forEach(reason => {
+                const div = document.createElement('div');
+                div.className = "p-4 bg-background-dark border border-slate-800 rounded-lg";
+                div.innerHTML = `
+                    <div class="flex items-center gap-2 text-primary mb-2">
+                        <span class="material-symbols-outlined text-sm">info</span>
+                        <span class="text-xs font-bold uppercase">Heuristic Flag</span>
+                    </div>
+                    <p class="text-sm text-slate-300 leading-relaxed">${reason}</p>
+                `;
+                findingsList.appendChild(div);
+            });
+
+        } catch (e) {
+            console.error('Error fetching scan data', e);
+        }
+    });
+
+    document.getElementById('backBtn').addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.href = 'dashboard.html';
+    });
 </script>

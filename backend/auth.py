@@ -1,32 +1,37 @@
-import os
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
+from jose import JWTError, jwt
 from datetime import datetime, timedelta
-from jose import jwt, JWTError
-from passlib.context import CryptContext
-from dotenv import load_dotenv
+import os
 
-load_dotenv()
-
-SECRET_KEY = os.environ.get("JWT_SECRET", "super-secret-jwt-key")
+ph = PasswordHasher()
+SECRET_KEY = os.getenv("JWT_SECRET", "phishguard-secret-key")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+EXPIRE_HOURS = 24
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return ph.hash(password)
 
 def verify_password(password: str, hashed: str) -> bool:
-    return pwd_context.verify(password, hashed)
+    try:
+        return ph.verify(hashed, password)
+    except VerifyMismatchError:
+        return False
 
 def create_jwt_token(user_id: int, email: str) -> str:
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode = {"sub": email, "user_id": user_id, "exp": expire}
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+    expire = datetime.utcnow() + timedelta(hours=EXPIRE_HOURS)
+    payload = {
+        "sub": str(user_id),
+        "email": email,
+        "exp": expire
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
-def verify_jwt_token(token: str):
+def verify_jwt_token(token: str) -> dict:
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(
+            token, SECRET_KEY, algorithms=[ALGORITHM]
+        )
         return payload
     except JWTError:
         return None

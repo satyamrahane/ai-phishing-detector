@@ -23,6 +23,7 @@ import os
 import sys
 import concurrent.futures
 import requests
+import socket
 import base64
 
 # Make utils/ importable when running from backend/ directory
@@ -48,13 +49,13 @@ def _load_model():
         try:
             with open(Config.MODEL_PATH, "rb") as f:
                 model = pickle.load(f)
-            print(f"[detector] ✅ ML model loaded from: {Config.MODEL_PATH}")
+            print(f"[detector] OK: ML model loaded from: {Config.MODEL_PATH}")
             return model
         except Exception as e:
-            print(f"[detector] ⚠️  Failed to load model ({e}). Using rule-based fallback.")
+            print(f"[detector] WARNING: Failed to load model ({e}). Using rule-based fallback.")
             return None
     else:
-        print(f"[detector] ℹ️  No model.pkl found at: {Config.MODEL_PATH}. Using rule-based detection.")
+        print(f"[detector] INFO: No model.pkl found at: {Config.MODEL_PATH}. Using rule-based detection.")
         return None
 
 # Load once at import time — avoids reloading on every request
@@ -216,6 +217,33 @@ def check_virustotal(url: str) -> int:
     return 0
 
 
+def get_ip_location(url: str) -> dict:
+    """Resolves URL domain to IP and fetches geographic location."""
+    try:
+        parsed = urlparse(url)
+        domain = (parsed.netloc or parsed.path).split(":")[0]
+        if not domain:
+            return {"ip": "0.0.0.0", "city": "Unknown", "country": "Unknown", "lat": 0, "lon": 0, "isp": "Unknown"}
+
+        ip = socket.gethostbyname(domain)
+        # Use ip-api.com (free, no key for low volume)
+        resp = requests.get(f"http://ip-api.com/json/{ip}", timeout=3)
+        if resp.status_code == 200:
+            data = resp.json()
+            if data.get("status") == "success":
+                return {
+                    "ip": ip,
+                    "city": data.get("city"),
+                    "country": data.get("country"),
+                    "lat": data.get("lat"),
+                    "lon": data.get("lon"),
+                    "isp": data.get("isp")
+                }
+        return {"ip": ip, "city": "Unknown", "country": "Unknown", "lat": 0, "lon": 0, "isp": "Unknown"}
+    except Exception:
+        return {"ip": "0.0.0.0", "city": "Unknown", "country": "Unknown", "lat": 0, "lon": 0, "isp": "Unknown"}
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # PUBLIC ENTRY POINT
 # Routes to ML or rule-based depending on model availability.
@@ -255,8 +283,12 @@ def analyze_url(url: str) -> dict:
     else:
         status = "Phishing"
 
+    # 4. Get Geolocation
+    geo_data = get_ip_location(url)
+
     return {
         "risk_score": final_score,
         "status": status,
         "reasons": reasons,
+        "ip_info": geo_data
     }

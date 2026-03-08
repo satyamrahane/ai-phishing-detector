@@ -66,21 +66,50 @@
                 <nav class="flex items-center gap-9">
                     <a class="text-slate-300 hover:text-primary transition-colors text-sm font-medium leading-normal"
                         href="index.html">Home</a>
-                    <a class="text-primary text-sm font-medium leading-normal" href="scanner.html">Scanner</a>
+                    <a class="text-primary text-sm font-medium leading-normal underline underline-offset-4"
+                        href="scanner.html">Scanner</a>
                     <a class="text-slate-300 hover:text-primary transition-colors text-sm font-medium leading-normal"
                         href="dashboard.html">Dashboard</a>
-                    <a class="text-slate-300 hover:text-primary transition-colors text-sm font-medium leading-normal"
-                        href="login.html">Login</a>
-                    <a class="text-slate-300 hover:text-primary transition-colors text-sm font-medium leading-normal"
-                        href="report.html">Report</a>
                 </nav>
-                <button
-                    class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-background-dark text-sm font-bold leading-normal transition-all hover:brightness-110">
-                    <span class="truncate">Sign Up</span>
-                </button>
-                <div
-                    class="bg-primary/20 border border-primary/30 rounded-full size-10 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-primary">person</span>
+
+                <div id="authActions" class="flex items-center gap-4">
+                    <button id="loginBtn" onclick="window.location.href='login.html'"
+                        class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-background-dark text-sm font-bold leading-normal transition-all hover:brightness-110">
+                        <span class="truncate">Sign Up / Login</span>
+                    </button>
+                </div>
+
+                <div id="profileActions" class="hidden flex items-center gap-4 relative">
+                    <button id="profileBtn"
+                        class="flex min-w-[84px] cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-primary text-background-dark text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors">
+                        <span class="truncate">Profile</span>
+                    </button>
+                    <div
+                        class="bg-primary/20 border border-primary/30 rounded-full size-10 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-primary">person</span>
+                    </div>
+
+                    <!-- Dropdown Menu -->
+                    <div id="profileDropdown"
+                        class="hidden absolute right-0 top-full mt-2 w-56 rounded-xl bg-slate-900 border border-primary/20 shadow-2xl z-[9999] overflow-hidden backdrop-blur-md">
+                        <div class="p-4 border-b border-primary/10">
+                            <p class="text-[10px] text-slate-500 uppercase tracking-widest mb-1 font-mono">Session
+                                Active</p>
+                            <p id="userEmailDisplay" class="text-xs font-mono text-primary truncate">user@email.com</p>
+                        </div>
+                        <div class="p-2">
+                            <a href="dashboard.html"
+                                class="flex items-center gap-3 px-3 py-2 text-sm text-slate-300 hover:bg-primary/10 hover:text-primary rounded-lg transition-all">
+                                <span class="material-symbols-outlined text-lg">dashboard</span>
+                                <span>Dashboard</span>
+                            </a>
+                            <button id="logoutBtnDropdown"
+                                class="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-400 hover:bg-red-400/10 rounded-lg transition-all">
+                                <span class="material-symbols-outlined text-lg">logout</span>
+                                <span>Logout</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </header>
@@ -263,6 +292,40 @@
     </div>
 
     <script>
+        // Auth Logic
+        const token = localStorage.getItem("token");
+        if (token) {
+            document.getElementById("authActions").classList.add("hidden");
+            document.getElementById("profileActions").classList.remove("hidden");
+            try {
+                const payload = JSON.parse(atob(token.split(".")[1]));
+                document.getElementById("userEmailDisplay").textContent = payload.email;
+            } catch (e) { console.error("Token error", e); }
+        }
+
+        function toggleDropdown() {
+            document.getElementById("profileDropdown").classList.toggle("hidden");
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        }
+
+        document.getElementById('profileBtn')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleDropdown();
+        });
+
+        document.getElementById('logoutBtnDropdown')?.addEventListener('click', logout);
+
+        window.addEventListener('click', () => {
+            const dropdown = document.getElementById("profileDropdown");
+            if (dropdown && !dropdown.classList.contains("hidden")) {
+                dropdown.classList.add("hidden");
+            }
+        });
+
         document.getElementById('scanForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const url = document.getElementById('urlInput').value.trim();
@@ -280,7 +343,7 @@
             document.getElementById('resultCard').style.display = 'none';
 
             try {
-                const res = await fetch('http://localhost:5000/scan', {
+                const res = await fetch('http://127.0.0.1:5000/scan', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

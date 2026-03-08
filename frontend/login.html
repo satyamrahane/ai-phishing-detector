@@ -216,13 +216,13 @@
                 </div>
                 <!-- Social Logins -->
                 <div class="grid grid-cols-2 gap-4">
-                    <button
+                    <a id="googleBtn" href="http://127.0.0.1:5000/auth/google"
                         class="flex items-center justify-center gap-2 py-3 px-4 border border-slate-200 dark:border-border-dark rounded-lg hover:bg-slate-100 dark:hover:bg-primary/5 transition-all">
                         <img alt="Google Logo" class="h-5 w-5" data-alt="Google authentication logo icon"
                             src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTucmOlw0rWZ2q-ILYx4sVEcNB-ck6HrWU8eXoU0dLRPQuU7LPnsQtzodLbG8y4Xg4Fg_jwSni3fpIurgV3Ny5Mg3x-AoTcdp7bh2g67xECxbZ6EOABhwKizuzlibganFtt1iTtxGKUZG9Klo6iZQbRcIh0Dnld4fqfubPIcoE-qdMjnNMfPReUbV0DL9yVoGl4IxHZJre6MtTrbRvb7wjEJo5bKKMxJrBa8o3IiAwVYJGywK4W7hzTp_LmyqROinDD6Jczk_MHilj" />
                         <span class="text-sm font-medium dark:text-slate-300">Google</span>
-                    </button>
-                    <button
+                    </a>
+                    <button id="githubBtn"
                         class="flex items-center justify-center gap-2 py-3 px-4 border border-slate-200 dark:border-border-dark rounded-lg hover:bg-slate-100 dark:hover:bg-primary/5 transition-all">
                         <img alt="Github Logo" class="h-5 w-5 dark:invert" data-alt="Github authentication logo icon"
                             src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1GAwNX9LbOKCwbQbI2RnYMr-jvW4K8HKeVKgkuZubLALP0hARpEnXkO42sF5ZLAHhBiht6yHqRELIhX35dsfpFE0eALoa1lLI_ZgDT3bolCd5d03qe-yV183BjoCSNT7NLkLbcwzx1uMjRrazUOqc9lwT6zrAOzmhBTDyQoKpCkCJtQ6bc9tGyLbElDNscU-4Q7iVqpOJnU_OG6ApCukWv93H2qHqR2-XCch2fvpMFvyj_Asnay2crz9yBpi6EBXctdy4wBaqu9-T" />
@@ -269,7 +269,7 @@
             const password = document.getElementById('password').value;
             const name = document.getElementById('name').value;
 
-            const url = isRegister ? 'http://localhost:5000/auth/register' : 'http://localhost:5000/auth/login';
+            const url = isRegister ? 'http://127.0.0.1:5000/auth/register' : 'http://127.0.0.1:5000/auth/login';
             const body = isRegister ? { name, email, password } : { email, password };
 
             try {
@@ -290,6 +290,12 @@
             } catch (err) {
                 alert('Network error connecting to auth server.');
             }
+        });
+
+        document.getElementById('githubBtn').addEventListener('click', async () => {
+            const res = await fetch('http://127.0.0.1:5000/auth/github');
+            const data = await res.json();
+            alert(data.message);
         });
 
     </script>
