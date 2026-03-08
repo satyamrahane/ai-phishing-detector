@@ -15,6 +15,8 @@ COPY . .
 
 EXPOSE 5000
 
+# Note: We keep app on the Python path
 ENV PYTHONPATH=/app
+WORKDIR /app/backend
 
-CMD ["python", "backend/app.py"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]

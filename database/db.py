@@ -1,50 +1,69 @@
-import sqlite3
 import json
 from datetime import datetime
 import os
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.orm import declarative_base, sessionmaker
 
-DB_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(DB_DIR, "db.sqlite")
+# Import load_dotenv to get DATABASE_URL if not set
+from dotenv import load_dotenv
+load_dotenv()
+
+DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://localhost/phishing_db")
+
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+class Scan(Base):
+    __tablename__ = "scans"
+
+    id = Column(Integer, primary_key=True, index=True)
+    url = Column(String, nullable=False)
+    risk_score = Column(Integer, nullable=False)
+    status = Column(String, nullable=False)
+    reasons = Column(String, nullable=False)  # Stored as JSON string
+    timestamp = Column(String, nullable=False)
 
 def init_db():
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS scans (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            url TEXT NOT NULL,
-            risk_score INTEGER NOT NULL,
-            status TEXT NOT NULL,
-            reasons TEXT NOT NULL,
-            timestamp TEXT NOT NULL
-        )
-    """)
-    conn.commit()
-    conn.close()
+    Base.metadata.create_all(bind=engine)
 
 def log_scan(url, risk_score, status, reasons):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO scans (url, risk_score, status, reasons, timestamp)
-        VALUES (?, ?, ?, ?, ?)
-    """, (url, risk_score, status, json.dumps(reasons), datetime.utcnow().isoformat(timespec='seconds')))
-    conn.commit()
-    conn.close()
+    session = SessionLocal()
+    try:
+        new_scan = Scan(
+            url=url,
+            risk_score=risk_score,
+            status=status,
+            reasons=json.dumps(reasons),
+            timestamp=datetime.utcnow().isoformat(timespec='seconds')
+        )
+        session.add(new_scan)
+        session.commit()
+    finally:
+        session.close()
 
 def get_recent_scans(limit=50):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT id, url, risk_score, status, reasons, timestamp
-        FROM scans ORDER BY id DESC LIMIT ?
-    """, (limit,))
-    rows = cursor.fetchall()
-    conn.close()
-    return [
-        {
-            "id": r[0], "url": r[1], "risk_score": r[2],
-            "status": r[3], "reasons": json.loads(r[4]), "timestamp": r[5]
-        }
-        for r in rows
-    ]
+    session = SessionLocal()
+    try:
+        rows = session.query(Scan).order_by(Scan.id.desc()).limit(limit).all()
+        return [
+            {
+                "id": r.id,
+                "url": r.url,
+                "risk_score": r.risk_score,
+                "status": r.status,
+                "reasons": json.loads(r.reasons),
+                "timestamp": r.timestamp
+            }
+            for r in rows
+        ]
+    finally:
+        session.close()
+
+def clear_all_scans():
+    session = SessionLocal()
+    try:
+        session.query(Scan).delete()
+        session.commit()
+    finally:
+        session.close()
