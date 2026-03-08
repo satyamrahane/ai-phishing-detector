@@ -20,6 +20,20 @@ import whois
 import datetime
 import pickle
 import os
+import sys
+
+# Make utils/ importable when running from backend/ directory
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "utils"))
+
+from explainability import (
+    explain_suspicious_keyword,
+    explain_missing_https,
+    explain_url_length,
+    explain_multiple_subdomains,
+    explain_recent_domain,
+    explain_ml_prediction,
+    explain_ml_high_risk,
+)
 
 # ──────────────────────────────────────────────────────────────────────────────
 # MODEL LOADER
@@ -130,9 +144,9 @@ def _ml_predict(url: str) -> dict:
     else:
         status = "Phishing"
 
-    reasons = ["ML model prediction used"]
+    reasons = [explain_ml_prediction()]
     if phishing_probability >= 0.7:
-        reasons.append("High phishing probability detected by ML model")
+        reasons.append(explain_ml_high_risk(phishing_probability))
 
     return {
         "risk_score": risk_score,
@@ -152,24 +166,26 @@ def _rule_based_analyze(url: str) -> dict:
     url_lower = url.lower()
 
     # Rule 1: Suspicious keywords
-    if any(kw in url_lower for kw in Config.SUSPICIOUS_KEYWORDS):
+    matched_kws = [kw for kw in Config.SUSPICIOUS_KEYWORDS if kw in url_lower]
+    if matched_kws:
         score += 40
-        reasons.append("Suspicious keyword detected")
+        reasons.append(explain_suspicious_keyword(matched_kws))
 
     # Rule 2: HTTPS check
     if not url_lower.startswith("https"):
         score += 30
-        reasons.append("URL does not use HTTPS")
+        reasons.append(explain_missing_https())
 
     # Rule 3: URL length
     if len(url) > 75:
         score += 20
-        reasons.append("URL length unusually long")
+        reasons.append(explain_url_length(len(url)))
 
     # Rule 4: Subdomain count
-    if url.count(".") > 3:
+    dot_count = url.count(".")
+    if dot_count > 3:
         score += 20
-        reasons.append("Multiple suspicious subdomains detected")
+        reasons.append(explain_multiple_subdomains(dot_count))
 
     # Rule 5: Domain age check
     try:
@@ -186,7 +202,7 @@ def _rule_based_analyze(url: str) -> dict:
                 age_days = (datetime.date.today() - creation_date).days
             if age_days < 30:
                 score += 30
-                reasons.append("Domain is recently registered (possible phishing)")
+                reasons.append(explain_recent_domain(age_days))
     except Exception:
         pass
 
