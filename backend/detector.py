@@ -121,38 +121,22 @@ def extract_features(url: str) -> list:
 # Called only when model.pkl is present.
 # Expected contract: model.predict_proba([[...features...]]) → [[p_safe, p_phish]]
 # ──────────────────────────────────────────────────────────────────────────────
-def _ml_predict(url: str) -> dict:
+def ml_predict(url: str) -> int:
     """
-    Use the trained ML model to produce a risk score and status.
-
-    The model must expose a predict_proba() method (standard sklearn API).
-    risk_score = round(phishing_probability * 100)
+    Use the trained ML model to produce a risk score.
+    Returns:
+        int (0-100)
     """
+    if _ML_MODEL is None:
+        return 50  # fallback if no model
+        
     features = extract_features(url)
 
     # predict_proba returns [[prob_class_0, prob_class_1]]
     # Class 1 is assumed to be "phishing" (label=1 during training)
     proba = _ML_MODEL.predict_proba([features])[0]
     phishing_probability = proba[1]
-    risk_score = min(round(phishing_probability * 100), 100)
-
-    # Derive status from score bands (same thresholds as rule-based)
-    if risk_score <= 40:
-        status = "Safe"
-    elif risk_score <= 70:
-        status = "Suspicious"
-    else:
-        status = "Phishing"
-
-    reasons = [explain_ml_prediction()]
-    if phishing_probability >= 0.7:
-        reasons.append(explain_ml_high_risk(phishing_probability))
-
-    return {
-        "risk_score": risk_score,
-        "status": status,
-        "reasons": reasons,
-    }
+    return int(phishing_probability * 100)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -206,20 +190,7 @@ def _rule_based_analyze(url: str) -> dict:
     except Exception:
         pass
 
-    score = min(score, 100)
-
-    if score <= 40:
-        status = "Safe"
-    elif score <= 70:
-        status = "Suspicious"
-    else:
-        status = "Phishing"
-
-    return {
-        "risk_score": score,
-        "status": status,
-        "reasons": reasons,
-    }
+    return score, reasons
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -229,14 +200,34 @@ def _rule_based_analyze(url: str) -> dict:
 def analyze_url(url: str) -> dict:
     """
     Analyse a URL for phishing risk.
-
-    Returns:
-        {
-            "risk_score": int (0-100),
-            "status":     str ("Safe" | "Suspicious" | "Phishing"),
-            "reasons":    list[str]
-        }
+    Blends ML score (60%) with rule-based score (40%) if model is present.
     """
+    
+    # 1. Get rule-based score & reasons
+    rule_score, reasons = _rule_based_analyze(url)
+    
+    # 2. Get ML score
     if _ML_MODEL is not None:
-        return _ml_predict(url)
-    return _rule_based_analyze(url)
+        ml_score = ml_predict(url)
+        final_score = int(0.6 * ml_score + 0.4 * rule_score)
+        reasons.append(explain_ml_prediction())
+        if ml_score >= 70:
+             reasons.append(explain_ml_high_risk(ml_score/100.0))
+    else:
+        final_score = rule_score
+        
+    final_score = min(final_score, 100)
+    
+    # 3. Derive status
+    if final_score <= 40:
+        status = "Safe"
+    elif final_score <= 70:
+        status = "Suspicious"
+    else:
+        status = "Phishing"
+
+    return {
+        "risk_score": final_score,
+        "status": status,
+        "reasons": reasons,
+    }

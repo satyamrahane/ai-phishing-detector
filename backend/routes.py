@@ -1,13 +1,15 @@
 from flask import Blueprint, request, jsonify
 from detector import analyze_url
 import datetime
+import sys
+import os
+import sqlite3
+
+# Add parent dir to path so we can import from database/
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from database.db import get_recent_scans, log_scan, DB_PATH
 
 scan_route = Blueprint("scan_route", __name__)
-
-# In-memory log storage — persists for the lifetime of the server process
-# Capped at MAX_LOGS entries; oldest entry is dropped when the cap is reached
-MAX_LOGS = 50
-scan_logs = []
 
 
 # ──────────────────────────────────────────────
@@ -25,30 +27,30 @@ def scan():
 
     result = analyze_url(url)
 
-    # Build log entry with all required fields
-    log_entry = {
-        "url": url,
-        "risk_score": result["risk_score"],
-        "status": result["status"],
-        # ISO-8601 timestamp without microseconds: e.g. "2026-03-08T15:30:00"
-        "timestamp": datetime.datetime.now().isoformat(timespec="seconds")
-    }
-    # Enforce the rolling cap — drop the oldest entry if needed
-    if len(scan_logs) >= MAX_LOGS:
-        scan_logs.pop(0)
-    scan_logs.append(log_entry)
+    # Log to SQLite database
+    log_scan(url, result["risk_score"], result["status"], result["reasons"])
 
     return jsonify(result)
 
 
 # ──────────────────────────────────────────────
-# GET /logs  →  Return latest scan logs (newest first, max 50)
+# GET /logs  →  Return latest scan logs and stats
 # ──────────────────────────────────────────────
 @scan_route.route("/logs", methods=["GET"])
 def get_logs():
-    # Return a plain JSON array, newest scan first, capped at MAX_LOGS
-    latest = list(reversed(scan_logs[-MAX_LOGS:]))
-    return jsonify(latest)
+    scans = get_recent_scans(limit=50)
+    total = len(scans)
+    phishing = sum(1 for s in scans if s["status"] == "Phishing")
+    suspicious = sum(1 for s in scans if s["status"] == "Suspicious")
+    safe = sum(1 for s in scans if s["status"] == "Safe")
+
+    return jsonify({
+        "total_scans": total,
+        "phishing_count": phishing,
+        "suspicious_count": suspicious,
+        "safe_count": safe,
+        "scans": scans
+    })
 
 
 # ──────────────────────────────────────────────
@@ -56,5 +58,9 @@ def get_logs():
 # ──────────────────────────────────────────────
 @scan_route.route("/logs", methods=["DELETE"])
 def clear_logs():
-    scan_logs.clear()
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM scans")
+    conn.commit()
+    conn.close()
     return jsonify({"message": "Scan logs cleared successfully"})

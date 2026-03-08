@@ -664,8 +664,8 @@
             try {
                 const res = await fetch(`${API_BASE}/logs`);
                 if (!res.ok) throw new Error(`Server returned ${res.status}`);
-
-                allLogs = await res.json();          // plain array from /logs
+                const data = await res.json();
+                allLogs = data.scans;                // get array from new wrapper API
                 currentPage = 0;
                 applyFilter(activeFilter);           // renders stats + table
                 document.getElementById("lastUpdated").textContent = nowTimestamp();
