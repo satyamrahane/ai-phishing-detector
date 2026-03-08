@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Phishing Detector</title>
+  <meta name="description" content="Real-time AI-powered phishing URL detection. Scan any URL instantly for phishing risk score, status, and detailed reasons." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Design tokens ─────────────────────────────────────────── */
+    :root {
+      --bg:        #0b0f1a;
+      --surface:   #111827;
+      --surface2:  #1a2235;
+      --border:    #1f2d45;
+      --accent:    #4f8ef7;
+      --accent-glow: rgba(79,142,247,0.25);
+      --safe:      #10b981;
+      --safe-bg:   rgba(16,185,129,0.12);
+      --warn:      #f59e0b;
+      --warn-bg:   rgba(245,158,11,0.12);
+      --danger:    #ef4444;
+      --danger-bg: rgba(239,68,68,0.12);
+      --text:      #e2e8f0;
+      --muted:     #64748b;
+      --radius:    14px;
+      --shadow:    0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    /* ── Reset ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px 80px;
+    }
+
+    /* ── Header ────────────────────────────────────────────────── */
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .shield-icon {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, #4f8ef7, #7c3aed);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 0 24px rgba(79,142,247,0.4);
+      animation: pulse-glow 3s ease-in-out infinite;
+    }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 24px rgba(79,142,247,0.4); }
+      50%       { box-shadow: 0 0 40px rgba(79,142,247,0.7); }
+    }
+    header h1 {
+      font-size: 2rem; font-weight: 700;
+      background: linear-gradient(135deg, #e2e8f0, #4f8ef7);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    header p { color: var(--muted); font-size: 0.95rem; margin-top: 6px; }
+
+    /* ── Card wrapper ──────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: var(--shadow);
+      width: 100%; max-width: 640px;
+    }
+
+    /* ── Search bar ────────────────────────────────────────────── */
+    .input-row {
+      display: flex; gap: 10px;
+      margin-bottom: 10px;
+    }
+    #urlInput {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #urlInput::placeholder { color: var(--muted); }
+    #urlInput:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    #scanBtn {
+      background: linear-gradient(135deg, #4f8ef7, #7c3aed);
+      border: none; border-radius: 10px;
+      color: #fff; font-weight: 600; font-size: 0.9rem;
+      padding: 14px 22px; cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.2s, transform 0.1s;
+      display: flex; align-items: center; gap: 8px;
+    }
+    #scanBtn:hover  { opacity: 0.9; }
+    #scanBtn:active { transform: scale(0.97); }
+    #scanBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .hint { color: var(--muted); font-size: 0.78rem; margin-bottom: 20px; }
+
+    /* ── Divider ───────────────────────────────────────────────── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+    /* ── Result area ───────────────────────────────────────────── */
+    #resultArea { display: none; }
+
+    /* Status badge */
+    .badge {
+      display: inline-block;
+      padding: 5px 14px; border-radius: 999px;
+      font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .badge.safe    { background: var(--safe-bg);   color: var(--safe);   border: 1px solid var(--safe);   }
+    .badge.warn    { background: var(--warn-bg);   color: var(--warn);   border: 1px solid var(--warn);   }
+    .badge.danger  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+
+    /* Score row */
+    .score-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .score-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 3rem; font-weight: 700; line-height: 1;
+    }
+    .score-number.safe   { color: var(--safe);   }
+    .score-number.warn   { color: var(--warn);   }
+    .score-number.danger { color: var(--danger); }
+
+    /* Risk meter bar */
+    .meter-track {
+      height: 8px; border-radius: 999px;
+      background: var(--surface2);
+      overflow: hidden; margin-bottom: 20px;
+    }
+    .meter-fill {
+      height: 100%; border-radius: 999px;
+      transition: width 0.8s cubic-bezier(0.4,0,0.2,1),
+                  background 0.6s ease;
+    }
+
+    /* Scanned URL */
+    .scanned-url {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem; color: var(--muted);
+      word-break: break-all; margin-bottom: 16px;
+    }
+    .scanned-url span { color: var(--accent); }
+
+    /* Reasons list */
+    .reasons-label {
+      font-size: 0.78rem; font-weight: 600;
+      color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.08em; margin-bottom: 10px;
+    }
+    #reasonsList { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    #reasonsList li {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      animation: slide-in 0.3s ease both;
+    }
+    #reasonsList li .icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+    @keyframes slide-in {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0);   }
+    }
+
+    /* Error box */
+    #errorBox {
+      display: none;
+      background: var(--danger-bg);
+      border: 1px solid var(--danger);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: var(--danger);
+      font-size: 0.875rem;
+      margin-top: 12px;
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── History section ───────────────────────────────────────── */
+    #historySection {
+      display: none;
+      margin-top: 28px; width: 100%; max-width: 640px;
+    }
+    #historySection h2 {
+      font-size: 0.95rem; font-weight: 600;
+      color: var(--muted); margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    #historySection h2 .count-pill {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 0.72rem; padding: 2px 8px;
+      color: var(--accent);
+    }
+    .history-table { width: 100%; border-collapse: collapse; }
+    .history-table th {
+      text-align: left; font-size: 0.72rem;
+      color: var(--muted); font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      padding: 0 12px 10px;
+    }
+    .history-table td {
+      padding: 10px 12px;
+      font-size: 0.82rem;
+      border-top: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .history-table tr:first-child td { border-top: none; }
+    .history-table .url-cell {
+      font-family: 'JetBrains Mono', monospace;
+      max-width: 240px; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap;
+      color: var(--muted);
+    }
+    .history-table .score-cell {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+    }
+
+    /* ── Footer ─────────────────────────────────────────────────── */
+    footer {
+      margin-top: 48px; color: var(--muted);
+      font-size: 0.78rem; text-align: center; line-height: 1.8;
+    }
+    footer strong { color: var(--accent); }
+
+    /* ── API contract box ─────────────────────────────────────── */
+    .api-box {
+      margin-top: 24px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+    }
+    .api-box .api-title {
+      font-size: 0.72rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--muted); margin-bottom: 10px;
+    }
+    .api-box pre {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--text);
+      white-space: pre-wrap;
+      line-height: 1.7;
+    }
+    .api-box .method { color: #f59e0b; font-weight: 700; }
+    .api-box .key    { color: #4f8ef7; }
+    .api-box .val    { color: #10b981; }
+    .api-box .url-c  { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="shield-icon">🛡️</div>
+      <h1>AI Phishing Detector</h1>
+    </div>
+    <p>Scan any URL for phishing risk — powered by rule-based AI + ML</p>
+  </header>
+
+  <!-- Scanner card -->
+  <div class="card">
+    <div class="input-row">
+      <input
+        id="urlInput"
+        type="url"
+        placeholder="https://example.com or http://login.verify-update.com"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <button id="scanBtn" onclick="scan()">
+        <span id="btnIcon">🔍</span>
+        <span id="btnText">Scan</span>
+      </button>
+    </div>
+    <p class="hint">Press Enter or click Scan. Results appear below instantly.</p>
+
+    <!-- Error -->
+    <div id="errorBox"></div>
+
+    <!-- Result -->
+    <div id="resultArea">
+      <hr class="divider" />
+      <div class="score-row">
+        <div>
+          <div class="reasons-label" style="margin-bottom:4px">Risk Score</div>
+          <span id="scoreNumber" class="score-number">0</span>
+          <span style="color:var(--muted);font-size:1.1rem"> / 100</span>
+        </div>
+        <span id="statusBadge" class="badge">—</span>
+      </div>
+
+      <div class="meter-track">
+        <div id="meterFill" class="meter-fill" style="width:0%"></div>
+      </div>
+
+      <p class="scanned-url">URL: <span id="scannedUrl"></span></p>
+
+      <div class="reasons-label">Why this score?</div>
+      <ul id="reasonsList"></ul>
+    </div>
+  </div>
+
+  <!-- API contract (for Tanish / frontend teammate) -->
+  <div style="width:100%;max-width:640px">
+    <div class="api-box">
+      <div class="api-title">📄 API Contract — share with frontend teammates</div>
+      <pre>
+<span class="method">POST</span>  <span class="url-c">http://127.0.0.1:5000/scan</span>
+
+Body:   { <span class="key">"url"</span>: <span class="val">"http://example.com"</span> }
+
+Response:
+{
+  <span class="key">"risk_score"</span>: <span class="val">80</span>,
+  <span class="key">"status"</span>:     <span class="val">"Phishing"</span>,
+  <span class="key">"reasons"</span>:    [<span class="val">"Suspicious keyword detected in URL: login"</span>]
+}
+
+<span class="method">GET</span>   <span class="url-c">http://127.0.0.1:5000/logs</span>   → all scan history
+<span class="method">DELETE</span> <span class="url-c">http://127.0.0.1:5000/logs</span>   → clear history</pre>
+    </div>
+  </div>
+
+  <!-- Scan history -->
+  <section id="historySection">
+    <h2>
+      Scan History
+      <span class="count-pill" id="historyCount">0 scans</span>
+    </h2>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>URL</th>
+            <th>Score</th>
+            <th>Status</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <strong>AI Phishing Detector</strong> · Backend: Flask · AI: Rule-based + ML-ready<br/>
+    API endpoint: <strong>POST http://127.0.0.1:5000/scan</strong>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
