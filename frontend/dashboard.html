@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Security Dashboard — AI Phishing & Scam Detection Platform</title>
+    <meta name="description"
+        content="Live cybersecurity monitoring dashboard showing phishing scan activity, threat counts, and recent scan results." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+        /* ── Dashboard-specific overrides ─────────────────────────── */
+
+        /* Top nav bar */
+        .topbar {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 36px;
+            padding: 0 2px;
+        }
+
+        .topbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topbar-brand .shield-icon {
+            width: 36px;
+            height: 36px;
+            font-size: 16px;
+            border-radius: 10px;
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+
+        .topbar-brand span {
+            font-size: 0.92rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #e2e8f0, #4f8ef7);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .topbar-nav {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-link {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            text-decoration: none;
+            padding: 7px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface2);
+            transition: color 0.2s, border-color 0.2s, background 0.2s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--accent);
+            border-color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        /* Page header */
+        .dash-header {
+            width: 100%;
+            max-width: 900px;
+            margin-bottom: 28px;
+        }
+
+        .dash-header h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #e2e8f0 30%, var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+
+        .dash-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 0.78rem;
+            color: var(--muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .dash-meta .node-dot {
+            flex-shrink: 0;
+        }
+
+        #lastUpdated {
+            color: var(--text-dim);
+        }
+
+        /* Stat cards grid */
+        .stats-grid {
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 20px 18px;
+            box-shadow: var(--shadow-card);
+            backdrop-filter: blur(12px);
+            transition: border-color 0.3s, transform 0.2s;
+            cursor: default;
+        }
+
+        .stat-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.4rem;
+            font-weight: 700;
+            line-height: 1;
+            transition: color 0.3s;
+        }
+
+        .stat-card.total .stat-value {
+            color: var(--accent);
+            text-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .stat-card.phish .stat-value {
+            color: var(--danger);
+            text-shadow: 0 0 20px var(--danger-glow);
+        }
+
+        .stat-card.suspect .stat-value {
+            color: var(--warn);
+            text-shadow: 0 0 20px var(--warn-glow);
+        }
+
+        .stat-card.safe-c .stat-value {
+            color: var(--safe);
+            text-shadow: 0 0 20px var(--safe-glow);
+        }
+
+        .stat-sub {
+            font-size: 0.72rem;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+
+        .stat-bar {
+            height: 3px;
+            border-radius: 999px;
+            margin-top: 14px;
+            background: var(--surface2);
+            overflow: hidden;
+        }
+
+        .stat-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            transition: width 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 0%;
+        }
+
+        .stat-card.total .stat-bar-fill {
+            background: var(--accent);
+        }
+
+        .stat-card.phish .stat-bar-fill {
+            background: var(--danger);
+        }
+
+        .stat-card.suspect .stat-bar-fill {
+            background: var(--warn);
+        }
+
+        .stat-card.safe-c .stat-bar-fill {
+            background: var(--safe);
+        }
+
+        /* Threats table section */
+        .table-section {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .table-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .table-header h2 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        /* Refresh button */
+        #refreshBtn {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.78rem;
+            letter-spacing: 0.02em;
+            padding: 9px 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            transition: opacity 0.2s, box-shadow 0.2s, transform 0.1s;
+            box-shadow: 0 0 14px rgba(79, 142, 247, 0.3);
+        }
+
+        #refreshBtn:hover {
+            opacity: 0.9;
+            box-shadow: 0 0 24px rgba(79, 142, 247, 0.5);
+        }
+
+        #refreshBtn:active {
+            transform: scale(0.96);
+        }
+
+        #refreshBtn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Filter chips */
+        .filter-chips {
+            display: flex;
+            gap: 6px;
+        }
+
+        .chip {
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--surface2);
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.15s;
+            user-select: none;
+        }
+
+        .chip:hover {
+            border-color: var(--border-hover);
+            color: var(--text);
+        }
+
+        .chip.active {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        .chip.danger-chip.active {
+            border-color: var(--danger);
+            color: var(--danger);
+            background: var(--danger-bg);
+        }
+
+        .chip.warn-chip.active {
+            border-color: var(--warn);
+            color: var(--warn);
+            background: var(--warn-bg);
+        }
+
+        .chip.safe-chip.active {
+            border-color: var(--safe);
+            color: var(--safe);
+            background: var(--safe-bg);
+        }
+
+        /* Table card */
+        .table-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-card);
+        }
+
+        .dash-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .dash-table thead {
+            background: var(--surface2);
+        }
+
+        .dash-table th {
+            text-align: left;
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.09em;
+            color: var(--muted);
+            padding: 13px 16px;
+            white-space: nowrap;
+        }
+
+        .dash-table td {
+            padding: 13px 16px;
+            font-size: 0.83rem;
+            border-top: 1px solid var(--border);
+            vertical-align: middle;
+            transition: background 0.15s;
+        }
+
+        /* Row highlight by status */
+        .dash-table tr.row-danger {
+            border-left: 3px solid var(--danger);
+        }
+
+        .dash-table tr.row-warn {
+            border-left: 3px solid var(--warn);
+        }
+
+        .dash-table tr.row-safe {
+            border-left: 3px solid var(--safe);
+        }
+
+        .dash-table tr.row-danger td:first-child {
+            padding-left: 13px;
+        }
+
+        .dash-table tr.row-warn td:first-child {
+            padding-left: 13px;
+        }
+
+        .dash-table tr.row-safe td:first-child {
+            padding-left: 13px;
+        }
+
+        .dash-table tbody tr:hover td {
+            background: var(--glass);
+        }
+
+        /* URL cell */
+        .url-td {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            max-width: 280px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .url-td.danger {
+            color: #fca5a5;
+        }
+
+        .url-td.warn {
+            color: #fcd34d;
+        }
+
+        .url-td.safe {
+            color: #6ee7b7;
+        }
+
+        /* Score cell */
+        .score-td {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.88rem;
+        }
+
+        .score-td.danger {
+            color: var(--danger);
+        }
+
+        .score-td.warn {
+            color: var(--warn);
+        }
+
+        .score-td.safe {
+            color: var(--safe);
+        }
+
+        /* Timestamp cell */
+        .ts-td {
+            color: var(--muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.76rem;
+            white-space: nowrap;
+        }
+
+        /* Empty / loading / error states */
+        .state-row td {
+            text-align: center;
+            padding: 52px 20px;
+            color: var(--muted);
+            font-size: 0.875rem;
+            border-top: none !important;
+        }
+
+        .state-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .state-msg {
+            color: var(--text-dim);
+        }
+
+        .state-sub {
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            background: var(--surface2);
+        }
+
+        .paging-info {
+            font-size: 0.76rem;
+            color: var(--muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .paging-btns {
+            display: flex;
+            gap: 6px;
+        }
+
+        .pg-btn {
+            font-size: 0.76rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 5px 12px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .pg-btn:hover:not(:disabled) {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .pg-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        /* Responsive */
+        @media (max-width: 700px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filter-chips {
+                display: none;
+            }
+
+            body {
+                padding: 24px 12px 60px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Top navigation bar -->
+    <nav class="topbar">
+        <div class="topbar-brand">
+            <div class="shield-icon">🛡️</div>
+            <span>AI Phishing &amp; Scam Detection Platform</span>
+        </div>
+        <div class="topbar-nav">
+            <a href="index.html" class="nav-link" id="navScanner">Scanner</a>
+            <a href="dashboard.html" class="nav-link active" id="navDash">Dashboard</a>
+        </div>
+    </nav>
+
+    <!-- Page heading -->
+    <div class="dash-header">
+        <h1>📊 Security Monitoring Dashboard</h1>
+        <div class="dash-meta">
+            <span class="node-dot"></span>
+            Live feed from <code style="color:var(--accent)">GET /logs</code>
+            &nbsp;·&nbsp;
+            Last updated: <span id="lastUpdated">—</span>
+        </div>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="stats-grid">
+        <div class="stat-card total">
+            <div class="stat-label">🔭 Total Scans</div>
+            <div class="stat-value" id="statTotal">0</div>
+            <div class="stat-sub">all-time this session</div>
+            <div class="stat-bar">
+                <div class="stat-bar-fill" id="barTotal"></div>
+            </div>
+        </div>
+        <div class="stat-card phish">
+            <div class="stat-label">🚨 Phishing</div>
+            <div class="stat-value" id="statPhish">0</div>
+            <div class="stat-sub">risk score &gt; 70</div>
+            <div class="stat-bar">
+                <div class="stat-bar-fill" id="barPhish"></div>
+            </div>
+        </div>
+        <div class="stat-card suspect">
+            <div class="stat-label">⚠️ Suspicious</div>
+            <div class="stat-value" id="statSuspect">0</div>
+            <div class="stat-sub">risk score 41–70</div>
+            <div class="stat-bar">
+                <div class="stat-bar-fill" id="barSuspect"></div>
+            </div>
+        </div>
+        <div class="stat-card safe-c">
+            <div class="stat-label">✅ Safe</div>
+            <div class="stat-value" id="statSafe">0</div>
+            <div class="stat-sub">risk score ≤ 40</div>
+            <div class="stat-bar">
+                <div class="stat-bar-fill" id="barSafe"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scan log table -->
+    <div class="table-section">
+        <div class="table-header">
+            <h2>
+                Recent Scan Activity
+                <span class="count-pill" id="rowCount">0 records</span>
+            </h2>
+            <div class="table-actions">
+                <div class="filter-chips">
+                    <span class="chip active" data-filter="all" onclick="setFilter(this,'all')">All</span>
+                    <span class="chip danger-chip" data-filter="Phishing"
+                        onclick="setFilter(this,'Phishing')">Phishing</span>
+                    <span class="chip warn-chip" data-filter="Suspicious"
+                        onclick="setFilter(this,'Suspicious')">Suspicious</span>
+                    <span class="chip safe-chip" data-filter="Safe" onclick="setFilter(this,'Safe')">Safe</span>
+                </div>
+                <button id="refreshBtn" onclick="loadDashboard()">
+                    <span id="refreshIcon">↻</span> Refresh
+                </button>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <table class="dash-table" id="scanTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>URL</th>
+                        <th>Risk Score</th>
+                        <th>Status</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- rows injected by JS -->
+                </tbody>
+            </table>
+            <div class="pagination">
+                <span class="paging-info" id="pagingInfo">Showing 0 of 0</span>
+                <div class="paging-btns">
+                    <button class="pg-btn" id="prevBtn" onclick="changePage(-1)" disabled>← Prev</button>
+                    <button class="pg-btn" id="nextBtn" onclick="changePage(1)" disabled>Next →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer style="max-width:900px;width:100%">
+        <strong>AI Phishing &amp; Scam Detection Platform</strong> · Dashboard ·
+        API: <strong>http://127.0.0.1:5000</strong>
+    </footer>
+
+    <script>
+        /* ── Dashboard inline JS ──────────────────────────────────────────────── */
+        const API_BASE = "http://127.0.0.1:5000";
+        const PAGE_SIZE = 10;
+
+        let allLogs = [];   // raw data from /logs
+        let filteredLogs = [];   // after filter chip applied
+        let currentPage = 0;
+        let activeFilter = "all";
+
+        // ── Fetch /logs and render everything ───────────────────────────────────
+        async function loadDashboard() {
+            const btn = document.getElementById("refreshBtn");
+            const icon = document.getElementById("refreshIcon");
+            btn.disabled = true;
+            icon.style.display = "inline-block";
+            icon.style.animation = "spin 0.7s linear infinite";
+
+            showTableState("loading");
+
+            try {
+                const res = await fetch(`${API_BASE}/logs`);
+                if (!res.ok) throw new Error(`Server returned ${res.status}`);
+
+                allLogs = await res.json();          // plain array from /logs
+                currentPage = 0;
+                applyFilter(activeFilter);           // renders stats + table
+                document.getElementById("lastUpdated").textContent = nowTimestamp();
+
+            } catch (err) {
+                showTableState("error", err.message);
+            } finally {
+                btn.disabled = false;
+                icon.style.animation = "";
+            }
+        }
+
+        // ── Filter chips ─────────────────────────────────────────────────────────
+        function setFilter(el, filter) {
+            document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+            el.classList.add("active");
+            activeFilter = filter;
+            currentPage = 0;
+            applyFilter(filter);
+        }
+
+        function applyFilter(filter) {
+            filteredLogs = filter === "all"
+                ? allLogs
+                : allLogs.filter(r => r.status === filter);
+            renderStats();
+            renderTable();
+        }
+
+        // ── Stats cards ──────────────────────────────────────────────────────────
+        function renderStats() {
+            const total = allLogs.length;
+            const phish = allLogs.filter(r => r.status === "Phishing").length;
+            const suspect = allLogs.filter(r => r.status === "Suspicious").length;
+            const safe = allLogs.filter(r => r.status === "Safe").length;
+
+            animNum("statTotal", total);
+            animNum("statPhish", phish);
+            animNum("statSuspect", suspect);
+            animNum("statSafe", safe);
+
+            // Bar widths relative to total
+            const pct = n => total > 0 ? Math.round((n / total) * 100) : 0;
+            setTimeout(() => {
+                setBar("barTotal", 100);
+                setBar("barPhish", pct(phish));
+                setBar("barSuspect", pct(suspect));
+                setBar("barSafe", pct(safe));
+            }, 80);
+        }
+
+        function setBar(id, pct) {
+            document.getElementById(id).style.width = pct + "%";
+        }
+
+        // ── Table rendering ───────────────────────────────────────────────────────
+        function renderTable() {
+            const tbody = document.getElementById("tableBody");
+            const total = filteredLogs.length;
+
+            document.getElementById("rowCount").textContent =
+                total + (total === 1 ? " record" : " records");
+
+            if (total === 0) {
+                showTableState(allLogs.length === 0 ? "empty" : "no-match");
+                updatePager(0, 0);
+                return;
+            }
+
+            const start = currentPage * PAGE_SIZE;
+            const end = Math.min(start + PAGE_SIZE, total);
+            const page = filteredLogs.slice(start, end);
+
+            tbody.innerHTML = "";
+            page.forEach((entry, idx) => {
+                const tier = getTier(entry.risk_score);
+                const tierLabel = { safe: "Safe", warn: "Suspicious", danger: "Phishing" };
+                const rowClass = { safe: "row-safe", warn: "row-warn", danger: "row-danger" };
+
+                const tr = document.createElement("tr");
+                tr.className = rowClass[tier];
+                tr.style.animationDelay = `${idx * 40}ms`;
+
+                tr.innerHTML = `
+          <td class="ts-td" style="color:var(--muted);width:36px">${start + idx + 1}</td>
+          <td class="url-td ${tier}" title="${escHtml(entry.url)}">${escHtml(entry.url)}</td>
+          <td class="score-td ${tier}">${entry.risk_score}</td>
+          <td><span class="badge ${tier}">${tierLabel[tier]}</span></td>
+          <td class="ts-td">${fmtTimestamp(entry.timestamp)}</td>
+        `;
+                tbody.appendChild(tr);
+            });
+
+            updatePager(start, total);
+        }
+
+        // ── Pagination ────────────────────────────────────────────────────────────
+        function updatePager(start, total) {
+            const end = Math.min(start + PAGE_SIZE, total);
+            document.getElementById("pagingInfo").textContent =
+                total === 0 ? "No records" : `Showing ${start + 1}–${end} of ${total}`;
+            document.getElementById("prevBtn").disabled = currentPage === 0;
+            document.getElementById("nextBtn").disabled = end >= total;
+        }
+
+        function changePage(delta) {
+            currentPage += delta;
+            renderTable();
+        }
+
+        // ── Empty / loading / error states ────────────────────────────────────────
+        function showTableState(type, msg) {
+            const states = {
+                loading: { icon: "⏳", msg: "Fetching scan logs…", sub: "" },
+                empty: { icon: "📭", msg: "No scans recorded yet.", sub: "Run a scan from the Scanner page first." },
+                "no-match": { icon: "🔍", msg: "No results for this filter.", sub: "Try switching to 'All'." },
+                error: { icon: "❌", msg: "Could not load scan logs.", sub: msg || "Is the Flask server running?" },
+            };
+            const s = states[type] || states.error;
+            document.getElementById("tableBody").innerHTML = `
+        <tr class="state-row">
+          <td colspan="5">
+            <span class="state-icon">${s.icon}</span>
+            <div class="state-msg">${s.msg}</div>
+            <div class="state-sub">${s.sub}</div>
+          </td>
+        </tr>`;
+        }
+
+        // ── Helpers ───────────────────────────────────────────────────────────────
+        function getTier(score) {
+            if (score <= 40) return "safe";
+            if (score <= 70) return "warn";
+            return "danger";
+        }
+
+        function fmtTimestamp(ts) {
+            if (!ts) return "—";
+            // "2026-03-08T16:20:00" → "2026-03-08 16:20"
+            return ts.replace("T", " ").substring(0, 16);
+        }
+
+        function escHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        function nowTimestamp() {
+            return new Date().toLocaleTimeString("en-IN", {
+                hour: "2-digit", minute: "2-digit", second: "2-digit"
+            });
+        }
+
+        function animNum(id, target) {
+            const el = document.getElementById(id);
+            const start = performance.now();
+            const dur = 600;
+            const from = parseInt(el.textContent) || 0;
+            function step(now) {
+                const p = Math.min((now - start) / dur, 1);
+                const e = 1 - Math.pow(1 - p, 3);
+                el.textContent = Math.round(from + (target - from) * e);
+                if (p < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+        }
+
+        // ── Auto-load on page open + auto-refresh every 30s ──────────────────────
+        document.addEventListener("DOMContentLoaded", () => {
+            loadDashboard();
+            setInterval(loadDashboard, 30000);
+        });
+    </script>
+</body>
+
+</html>

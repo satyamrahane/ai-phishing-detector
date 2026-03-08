@@ -1,7 +1,11 @@
 /**
- * script.js — AI Phishing Detector Frontend Logic
- * ================================================
- * API endpoint: POST http://127.0.0.1:5000/scan
+ * script.js — AI Phishing & Scam Detection Platform
+ * ==================================================
+ * Shared logic for:
+ *   - index.html    → scan() — POST /scan
+ *   - dashboard.html → loadDashboard() — GET /logs  (self-contained inline JS)
+ *
+ * API base: http://127.0.0.1:5000
  */
 
 const API_BASE = "http://127.0.0.1:5000";
